@@ -40,6 +40,10 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
 
   int ArraySize = OpticFlow.size();
   int i;
+
+  int ResolutionX = 240;
+  int ResolutionY = 180;
+
   std::vector<std::vector<double>> norm_lines;
   std::vector<std::vector<double>> all_lines;
   std::vector<std::vector<double>> all_rules;

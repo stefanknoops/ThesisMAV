@@ -60,14 +60,17 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
                     double *FoE_y)
 {
   int ArraySize = OpticFlow.size();
-  // ROS_INFO("arraysize %i", ArraySize);
-  std::vector<std::vector<double>> norm_lines(ArraySize, std::vector<double>{0.0, 0.0, 0.0});
-  std::vector<std::vector<double>> all_lines;
-  std::vector<std::vector<double>> all_rules(ArraySize, std::vector<double>{0.0, 0.0, 0.0, 0.0, 0.0});
+  //ROS_INFO("arraysize %i", ArraySize);
 
-  std::vector<std::vector<double>> InitialHullLines = {{0.0, 1.0, 0.0}, {1.0, 0.0, 0.0}, {0.0, 1.0, -180.0}, {1.0, 0.0, -240.0}};
-  std::vector<std::vector<double>> InitialHullRules = {{0.0, 1.0, 0.0, -1.0, 0.0, 0.0}, {1.0, 0.0, 0.0, 0.0, -1.0, 0.0}, {0.0, 1.0, -180.0, 1.0, 0.0, 0.0}, {1.0, 0.0, -240.0, 0.0, 1.0, 0.0}};
-  std::vector<std::vector<double>> InitialHullPoints = {{0.0, 0.0}, {0.0, 180.0}, {240.0, 180.0}, {240.0, 0.0}};
+  double ResolutionX = 240.0;
+  double ResolutionY = 180.0;
+
+  std::vector<std::vector<double>> norm_lines(ArraySize, std::vector<double>{0.0, 0.0, 0.0});
+  std::vector<std::vector<double>> all_rules(ArraySize, std::vector<double>{0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
+
+  std::vector<std::vector<double>> InitialHullLines = {{0.0, 1.0, 0.0}, {1.0, 0.0, 0.0}, {0.0, 1.0, -ResolutionY}, {1.0, 0.0, -ResolutionX}};
+  std::vector<std::vector<double>> InitialHullRules = {{0.0, 1.0, 0.0, -1.0, 0.0, 0.0}, {1.0, 0.0, 0.0, 0.0, -1.0, 0.0}, {0.0, 1.0, -ResolutionY, 1.0, 0.0, 0.0}, {1.0, 0.0, -ResolutionX, 0.0, 1.0, 0.0}};
+  std::vector<std::vector<double>> InitialHullPoints = {{0.0, 0.0}, {0.0, ResolutionY}, {ResolutionX, ResolutionY}, {ResolutionX, 0.0}};
   std::vector<std::vector<double>> BestHull = InitialHullPoints;
   std::vector<std::vector<double>> HullLines;
   std::vector<std::vector<double>> HullRules;
@@ -95,12 +98,15 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
     double A = OpticFlow[i].u;
     double B = OpticFlow[i].v;
 
-    double C = -(A * OpticFlow[i].x + B * OpticFlow[i].y);
+    double C = -(A * (double)OpticFlow[i].x + B * (double)OpticFlow[i].y);
     norm_lines[i][0] = B;
     norm_lines[i][1] = -A;
 
     // norm_lines[i][2] = (OpticFlow[i].x * (OpticFlow[i].y + OpticFlow[i].v) - (OpticFlow[i].x + OpticFlow[i].u) * OpticFlow[i].y);
     norm_lines[i][2] = C;
+    
+    //ROS_INFO("vector = %lf u + %lf v @ x = %lf and y = %lf", OpticFlow[i].u,OpticFlow[i].v,(double)OpticFlow[i].x,(double)OpticFlow[i].y);
+    //ROS_INFO("Norm line = %lf x + %lf y + %lf", B,-A,C);
   }
 
   //  Create a list with the rules for all vectors
@@ -130,10 +136,13 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
   //   all_lines.push_back(append_vector);
   // }
 
+  // AmountOfIterations = std::min(AmountOfIterations,ArraySize);
+  int MaxFailures = 1;
+
   for (int n = 0; n < AmountOfIterations; n++)
   { // for n iterations
     // ROS_INFO("iteration %i", n);
-    //  initiate hull
+    //   initiate hull
     std::vector<int> VectorInHull(norm_lines.size(), 0);
     std::vector<int> VectorTried(norm_lines.size(), 0);
 
@@ -143,7 +152,6 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
 
     bool StopSearch = false;
     int StopCount = 0;
-    int MaxFailures = 1;
     std::vector<double> RandomVectorRule;
 
     // set all vectors to not tried
@@ -156,6 +164,7 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
                       { return x == 1; }))
       {
         StopSearch = true;
+        // ROS_INFO("STOP");
       }
       else
       {
@@ -165,6 +174,14 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
           RandomVectorIndex = RandomNumberDistribution(RandomNumber);
         };
       };
+
+      if (StopSearch)
+      {
+        break;
+      }
+
+      // ROS_INFO("Random vector index = %i", RandomVectorIndex);
+
       VectorTried[RandomVectorIndex] = 1;
 
       // see if all vectors are tried yet
@@ -182,11 +199,11 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
         RandomVector[1] = -RandomVector[1];
         RandomVector[2] = -RandomVector[2];
 
-        RandomVectorRule = {RandomVector[0], RandomVector[1], RandomVector[2], sign_v, sign_u,(double)RandomVectorIndex};
+        RandomVectorRule = {RandomVector[0], RandomVector[1], RandomVector[2], sign_v, sign_u, (double)RandomVectorIndex};
       }
       else
       {
-        RandomVectorRule = {RandomVector[0], RandomVector[1], RandomVector[2], sign_v, sign_u,(double)RandomVectorIndex};
+        RandomVectorRule = {RandomVector[0], RandomVector[1], RandomVector[2], sign_v, sign_u, (double)RandomVectorIndex};
       }
 
       bool AddCheck = false;
@@ -205,6 +222,10 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
         double CramerD = RandomVector[1];
         double CramerF = -RandomVector[2];
 
+        // ROS_INFO("HL a %lf", HullLines[i][0]);
+        // ROS_INFO("HL b %lf", HullLines[i][1]);
+        // ROS_INFO("HL c %lf", HullLines[i][2]);
+
         double DeterminantA = CramerA * CramerD - CramerB * CramerC;
 
         if (DeterminantA != 0.0)
@@ -216,8 +237,8 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
           double IntersectionX = (CramerE * CramerD - CramerB * CramerF) / DeterminantA;
           double IntersectionY = (CramerA * CramerF - CramerC * CramerE) / DeterminantA;
 
-          // ROS_INFO("x %lf",IntersectionX);
-          // ROS_INFO("y %lf",IntersectionY);
+          // ROS_INFO("x %lf", IntersectionX);
+          // ROS_INFO("y %lf", IntersectionY);
 
           Illegal = false;
           for (int j = 0; j < HullRules.size(); j++) // for all rules
@@ -288,6 +309,7 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
         else
         {
           IllegalCount += 1;
+          // ROS_INFO("Parallel");
         }
       }
 
@@ -421,7 +443,7 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
   double FOEY = 0;
   for (int i = 0; i < BestHull.size(); i++)
   {
-    // ROS_INFO("point %i: %lf, %lf", i, BestHull[i][0], BestHull[i][1]);
+    //ROS_INFO("point %i: %lf, %lf", i, BestHull[i][0], BestHull[i][1]);
     FOEX = FOEX + BestHull[i][0];
     FOEY = FOEY + BestHull[i][1];
     ////ROS_INFO("FOEX %lf", FOEX);

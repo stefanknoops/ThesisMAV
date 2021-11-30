@@ -23,13 +23,10 @@ class GroundTruth {
   ros::NodeHandle nh_;
 
   void optitrackBebopCallback(const geometry_msgs::PoseStamped& msg);
-  void optitrackNeuromavCallback(const geometry_msgs::PoseStamped& msg);
 
   ros::Subscriber bebop_sub_;
-  ros::Subscriber neuromav_sub_;
 
   Pose bebop_pose_;
-  Pose neuromav_pose_;
 
   int map_size_u_ = 180;
   int map_size_v_ = 249;

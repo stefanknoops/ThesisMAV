@@ -5,19 +5,16 @@ namespace ground_truth {
 GroundTruth::GroundTruth(ros::NodeHandle& nh, ros::NodeHandle nh_private)
     : nh_(nh), bebop_pose_(), neuromav_pose_(), display_bebop_(true) {
   // Setup subscribers and publishers
-  bebop_sub_ = nh_.subscribe("optitrack_bebop_sub", 1,
-                             &GroundTruth::optitrackBebopCallback, this);
-  neuromav_sub_ = nh_.subscribe("optitrack_neuromav_sub", 1,
-                                &GroundTruth::optitrackNeuromavCallback, this);
+  optitrack_sub_ = nh_.subscribe("/optitrack/pose", 1,
+                             &GroundTruth::optitrackCallback, this);
 }
 
 GroundTruth::~GroundTruth() {
   // Shut down subscribers
-  bebop_sub_.shutdown();
-  neuromav_sub_.shutdown();
+  optitrack_sub_.shutdown();
 }
 
-void GroundTruth::optitrackBebopCallback(
+void GroundTruth::optitrackCallback(
     const geometry_msgs::PoseStamped& msg) {
   Vector3 pos;
   Quaternion ori;
@@ -35,28 +32,12 @@ void GroundTruth::optitrackBebopCallback(
   bebop_pose_.setOri(ori);
 }
 
-void GroundTruth::optitrackNeuromavCallback(
-    const geometry_msgs::PoseStamped& msg) {
-  Vector3 pos;
-  Quaternion ori;
 
-  pos.setX(msg.pose.position.x);
-  pos.setY(msg.pose.position.y);
-  pos.setZ(msg.pose.position.z);
-  ori.setX(msg.pose.orientation.x);
-  ori.setY(msg.pose.orientation.y);
-  ori.setZ(msg.pose.orientation.z);
-  ori.setW(msg.pose.orientation.w);
-
-  neuromav_pose_.setPos(pos);
-  neuromav_pose_.setOri(ori);
-}
-
-void GroundTruth::paintOptitrackDrone(cv_bridge::CvImage& image) {
+void GroundTruth::paintTrueFoE(cv_bridge::CvImage& image) {
   Pose default_pose;
 
   // If the poses have been initialized
-  if (bebop_pose_ != default_pose && neuromav_pose_ != default_pose) {
+  if (bebop_pose_ != default_pose) {
     // Get neuromav's orientation
     Quaternion neuromav_ori = neuromav_pose_.getOri();
 

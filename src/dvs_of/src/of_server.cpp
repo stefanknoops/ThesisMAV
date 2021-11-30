@@ -417,6 +417,9 @@ namespace dvs_of {
             // Angle of optic flow
             ang_OF = atan2(this->myFlowPacket.v, this->myFlowPacket.u);
 
+            float derotatedU = this->myFlowPacket.u - rotational_u;
+            float derotatedV = this->myFlowPacket.v - rotational_v;
+            /**    
             // Angle of rotational flow
             ang_OF_rot = atan2(rotational_v,rotational_u);
 
@@ -455,15 +458,17 @@ namespace dvs_of {
             v_der = OF_der * sin(pos_ang_OF);
 
             derotate_mag = rotational_u * rotational_u + rotational_v * rotational_v;
-            
+
+            */
+
             // Publish the Optic flow
-            dvs_of_msg::FlowPacketMsg OFmsg_;   
+            dvs_of_msg::FlowPacketMsg OFmsg_;  
             OFmsg_.x = this->myFlowPacket.x;
             OFmsg_.y = this->myFlowPacket.y;
             OFmsg_.t = this->myFlowPacket.t;
             OFmsg_.p = this->myFlowPacket.p;
-            OFmsg_.u = u_der; 
-            OFmsg_.v = v_der;
+            OFmsg_.u = derotatedU; 
+            OFmsg_.v = derotatedV;
             OFmsg_.ux = this->myFlowPacket.ux;
             OFmsg_.uy = this->myFlowPacket.uy;
             
