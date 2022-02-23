@@ -68,9 +68,9 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
   std::vector<std::vector<double>> norm_lines(ArraySize, std::vector<double>{0.0, 0.0, 0.0});
   std::vector<std::vector<double>> all_rules(ArraySize, std::vector<double>{0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
 
-  std::vector<std::vector<double>> InitialHullLines = {{0.0, 1.0, 0.0}, {1.0, 0.0, 0.0}, {0.0, 1.0, -ResolutionY}, {1.0, 0.0, -ResolutionX}};
-  std::vector<std::vector<double>> InitialHullRules = {{0.0, 1.0, 0.0, -1.0, 0.0, 0.0}, {1.0, 0.0, 0.0, 0.0, -1.0, 0.0}, {0.0, 1.0, -ResolutionY, 1.0, 0.0, 0.0}, {1.0, 0.0, -ResolutionX, 0.0, 1.0, 0.0}};
-  std::vector<std::vector<double>> InitialHullPoints = {{0.0, 0.0}, {0.0, ResolutionY}, {ResolutionX, ResolutionY}, {ResolutionX, 0.0}};
+  std::vector<std::vector<double>> InitialHullLines = {{0.0, 1.0, -1.0}, {1.0, 0.0, -1.0}, {0.0, 1.0, -ResolutionY}, {1.0, 0.0, -ResolutionX}};
+  std::vector<std::vector<double>> InitialHullRules = {{0.0, 1.0, -1.0, -1.0, 0.0, 0.0}, {1.0, 0.0, -1.0, 0.0, -1.0, 0.0}, {0.0, 1.0, -ResolutionY, 1.0, 0.0, 0.0}, {1.0, 0.0, -ResolutionX, 0.0, 1.0, 0.0}};
+  std::vector<std::vector<double>> InitialHullPoints = {{1.0, 1.0}, {1.0, ResolutionY}, {ResolutionX, ResolutionY}, {ResolutionX, 1.0}};
   std::vector<std::vector<double>> BestHull = InitialHullPoints;
   std::vector<std::vector<double>> HullLines;
   std::vector<std::vector<double>> HullRules;
@@ -98,7 +98,7 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
     double A = OpticFlow[i].u;
     double B = OpticFlow[i].v;
 
-    double C = -(A * (double)OpticFlow[i].x + B * (double)OpticFlow[i].y);
+    double C = -(A * OpticFlow[i].x + B * OpticFlow[i].y);
     norm_lines[i][0] = B;
     norm_lines[i][1] = -A;
 

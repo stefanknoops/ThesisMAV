@@ -63,13 +63,13 @@ namespace dvs_of{
     private:
         int32_t length_;
         float period_;  // us
-        uint8_t num_ele = 5;
+        uint8_t num_ele = 0; // = 5
         MedianFilter p_filt = MedianFilter(num_ele);
         MedianFilter q_filt = MedianFilter(num_ele);
         MedianFilter r_filt = MedianFilter(num_ele);
 
         rates_t *buffer_;
-        int32_t buffer_idx_ = 0;
+        
 
         std::mutex rates_mutex;
 
@@ -78,6 +78,9 @@ namespace dvs_of{
         RateBuffer(float time_window, float rate);
         RateBuffer(float time_window, float rate, uint32_t SizeIMU);
         ~RateBuffer();
+        int32_t buffer_idx_ = 0;
+
+        std::vector<rates_t> NewBuffer;
 
         int32_t getLength();
         void resetMedianFilters();

@@ -82,7 +82,7 @@ uint64_t last_ts = 0;
 double prev_time = 0.0;
 
 // Processing rate (Hz) for FoE estimation
-double rate_ = 40;
+double rate_ = 100000;
 double period_ = 1.0 / rate_;
 
 // Logging function for incoming OF
