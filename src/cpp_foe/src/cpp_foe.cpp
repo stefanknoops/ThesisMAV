@@ -60,7 +60,7 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
                     double *FoE_y)
 {
   int ArraySize = OpticFlow.size();
-  //ROS_INFO("arraysize %i", ArraySize);
+  // ROS_INFO("arraysize %i", ArraySize);
 
   double ResolutionX = 240.0;
   double ResolutionY = 180.0;
@@ -104,9 +104,9 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
 
     // norm_lines[i][2] = (OpticFlow[i].x * (OpticFlow[i].y + OpticFlow[i].v) - (OpticFlow[i].x + OpticFlow[i].u) * OpticFlow[i].y);
     norm_lines[i][2] = C;
-    
-    //ROS_INFO("vector = %lf u + %lf v @ x = %lf and y = %lf", OpticFlow[i].u,OpticFlow[i].v,(double)OpticFlow[i].x,(double)OpticFlow[i].y);
-    //ROS_INFO("Norm line = %lf x + %lf y + %lf", B,-A,C);
+
+    // ROS_INFO("vector = %lf u + %lf v @ x = %lf and y = %lf", OpticFlow[i].u,OpticFlow[i].v,(double)OpticFlow[i].x,(double)OpticFlow[i].y);
+    // ROS_INFO("Norm line = %lf x + %lf y + %lf", B,-A,C);
   }
 
   //  Create a list with the rules for all vectors
@@ -443,7 +443,7 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
   double FOEY = 0;
   for (int i = 0; i < BestHull.size(); i++)
   {
-    //ROS_INFO("point %i: %lf, %lf", i, BestHull[i][0], BestHull[i][1]);
+    // ROS_INFO("point %i: %lf, %lf", i, BestHull[i][0], BestHull[i][1]);
     FOEX = FOEX + BestHull[i][0];
     FOEY = FOEY + BestHull[i][1];
     ////ROS_INFO("FOEX %lf", FOEX);
@@ -469,14 +469,35 @@ void estimationServer()
   log_OF(&myOF);
   std::vector<FlowPacket> optic_flow;
   int buffersize = final_buffer.size();
-
-  if (final_buffer.size() > 0)
+  // ROS_INFO("estimationserver buffersize: %i", buffersize);
+  if (final_buffer.size() > 5)
   {
 
     optic_flow = fillOpticFlowArray();
 
+    // double beforetime = ros::Time::now().toSec();
+
     // Run FOE estimation
     estimateFoECPP(optic_flow, &FoE_x, &FoE_y);
+    // Add 0.5 to FoE_x for truncating by compiler to integer
+    // double calctime = ros::Time::now().toSec() - beforetime;
+
+    // ROS_INFO("estimateFoECPP time: %f", calctime);
+
+    prev_time = ros::Time::now().toSec();
+
+    FoE_msg.data.resize(2);
+    int32_t pub_x;
+    pub_x = (int64_t)(FoE_x);
+    int32_t pub_y;
+    pub_y = (int64_t)(FoE_y);
+    std::vector<int64_t> msgArray = {pub_x, pub_y};
+
+    OF_rec_file << ros::Time::now().toNSec() << "," << pub_x << "," << pub_y << std::endl;
+
+    FoE_msg.data = msgArray;
+    // Publish the FOE onto its topic
+    FoE_pub.publish(FoE_msg);
   }
 }
 
@@ -502,21 +523,15 @@ void opticflowCallback(const dvs_of_msg::FlowPacketMsgArray::ConstPtr &msg) // g
   {
 
     // Fill OF buffers and run FOE estimation
+
+    // double beforetime = ros::Time::now().toSec();
+
+    // Run FOE estimation
     estimationServer();
     // Add 0.5 to FoE_x for truncating by compiler to integer
+    // double calctime = ros::Time::now().toSec() - beforetime;
 
-    FoE_msg.data.resize(2);
-    int32_t pub_x;
-    pub_x = (int64_t)(FoE_x);
-    int32_t pub_y;
-    pub_y = (int64_t)(FoE_y);
-    std::vector<int64_t> msgArray = {pub_x, pub_y};
-
-    FoE_msg.data = msgArray;
-    // Publish the FOE onto its topic
-    FoE_pub.publish(FoE_msg);
-
-    prev_time = ros::Time::now().toSec();
+    // ROS_INFO("estimationServer time: %f", calctime);
   }
 }
 
@@ -556,6 +571,11 @@ int main(int argc, char **argv)
   // Initialize subscribers and publishers
   ros::Subscriber sub = n.subscribe("/OpticFlow", 1, opticflowCallback);
   FoE_pub = n.advertise<std_msgs::Int64MultiArray>("/FoE", 1);
+
+  std::string myDate = currentDateTime();
+
+  std::string filename = "FoE_recording_" + myDate + ".txt";
+  OF_rec_file.open(filename);
 
   ros::spin();
 

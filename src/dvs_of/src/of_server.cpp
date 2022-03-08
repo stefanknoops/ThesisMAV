@@ -91,14 +91,14 @@ namespace dvs_of
     rates_t RateBuffer::find_average_rate(int64_t ts)
     {
         // ROS_INFO("new average");
-        rates_t rate = {0,0,0,0};
-               this->rates_mutex.lock();
+        rates_t rate = {0, 0, 0, 0};
+        this->rates_mutex.lock();
 
         /*
         float total_rates = 0.f;
         // ROS_INFO("rate p %f",rate.p);
 
-        
+
         uint32_t idx = this->find_closest_rate_idx(ts);
         uint32_t idx_now = (this->buffer_idx_ - 1 + this->length_) % this->length_;
 
@@ -137,7 +137,7 @@ namespace dvs_of
         // ROS_INFO("average rate p %f",rate.p);
 
         // New average calculation
-    
+
         rate = {0,0,0,0};
         */
         // ROS_INFO("buffersize %i", NewBuffer.size());
@@ -153,7 +153,7 @@ namespace dvs_of
         rate.p /= total;
         rate.q /= total;
         rate.r /= total;
-        //std::cout << "rate p new " << rate.p << "\n";
+        // std::cout << "rate p new " << rate.p << "\n";
         rate.ts = NewBuffer[NewBuffer.size() - 1].ts;
 
         this->rates_mutex.unlock();
@@ -231,8 +231,8 @@ namespace dvs_of
             this->q_filt.update((*it).gyr_x); // x Pitch
             this->r_filt.update((*it).gyr_y); // y Yaw
             if ((*it).t >= last_ts + this->period_ && initialized)
-            {               
-                 this->rates_mutex.lock();
+            {
+                this->rates_mutex.lock();
                 last_ts = (*it).t;
 
                 /*
@@ -690,6 +690,7 @@ namespace dvs_of
 
     void Server::eventsCallback(const dvs_msgs::EventArray::ConstPtr &msg)
     {
+        
         myEvents.clear();
 
         if (myEvents.empty())
@@ -719,11 +720,21 @@ namespace dvs_of
 
             if (!myEvents.empty())
             {
-                myOpticFlow->computeOpticFlowVectors(&myEvents, &myIMU);
-                OF_pub_.publish(PacketPub_);
-                // ROS_INFO("dvs");
 
-                PacketPub_.flowpacketmsgs.clear();
+                myOpticFlow->computeOpticFlowVectors(&myEvents, &myIMU);
+
+
+
+
+
+                if (PacketPub_.flowpacketmsgs.size() > 0)
+                {
+                    OF_pub_.publish(PacketPub_);
+                    PacketPub_.flowpacketmsgs.clear();
+                }
+
+     
+                // ROS_INFO("dvs");
             }
         }
     }

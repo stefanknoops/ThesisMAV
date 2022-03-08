@@ -92,6 +92,19 @@ void log_OF(std::vector<FlowPacket> *myOF);
 static std::vector<FlowPacket> fillOpticFlowArray();
 
 void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double  *FoE_x, double *FoE_y);
+std::ofstream OF_rec_file;
+
+
+inline const std::string currentDateTime(void) {
+    time_t     now = time(0);
+    struct tm  tstruct;
+    char       buf[80];
+    tstruct = *localtime(&now);
+    // Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
+    // for more information about date/time format
+    strftime(buf, sizeof(buf), "%Y_%m_%d-%H_%M_%S", &tstruct);
+    return buf;
+}
 
 
 #endif // CPP_FOE_H_
