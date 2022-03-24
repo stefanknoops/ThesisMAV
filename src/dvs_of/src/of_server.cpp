@@ -31,6 +31,8 @@ namespace dvs_of
 {
 
     dvs_of_msg::FlowPacketMsgArray PacketPub_;
+    dvs_of_msg::VectorCount countpackage;
+
 
     /**
      * Function for implementing the binary search
@@ -252,7 +254,7 @@ namespace dvs_of
                 newRates.ts = last_ts;
                 NewBuffer.push_back(newRates);
 
-                if (NewBuffer.size() > 3)
+                if (NewBuffer.size() > 4)
                 {
                     NewBuffer.erase(NewBuffer.begin());
                 }
@@ -453,290 +455,325 @@ namespace dvs_of
         freeFlowStateMem(&this->myFlowState);
     }
 
-    /**
-     * Get the flow vectors
-     */
-    void OpticFlow::computeOpticFlowVectors(std::vector<Events> *myEventsFOV, std::vector<IMU> *myIMU)
+    bool OpticFlow::checkVectorDirection(FlowPacket flow)
     {
-        rates_t rates;
-
-        std::mutex derot_mutex;
-
-        float rotational_u = 0.f, rotational_v = 0.f;
-
-        float x_nor, y_nor;
-
-        float derotate_u = 0.f, derotate_v = 0.f;
-        float derotate_mag = 0.0f;
-
-        std::vector<Events>::iterator it = myEventsFOV->begin();
-        uint64_t t0 = (*it).t;
-        uint64_t tf;
-        Timer<std::chrono::microseconds> timer;
-        float time_since_last = timer.toc();
-        timer.tic();
-
-        for (; it != myEventsFOV->end(); it++)
+        if ((((flow.x < 120 && flow.u < 0) || (flow.x > 120 && flow.u >= 0))) && (((flow.y < 90 && flow.v < 0) || (flow.y > 90 && flow.v >= 0))))
         {
-
-            this->myFlowPacket.x = (*it).x;
-            this->myFlowPacket.y = (*it).y;
-            this->myFlowPacket.p = (*it).p;
-            this->myFlowPacket.t = (*it).t;
-            // software based refractory period check
-            if (this->myFlowPacket.t < this->sae_on.buffer2D[this->myFlowPacket.x][this->myFlowPacket.y] + this->myFlowState.refPeriod ||
-                this->myFlowPacket.t < this->sae_off.buffer2D[this->myFlowPacket.x][this->myFlowPacket.y] + this->myFlowState.refPeriod)
-            {
-                continue;
-            }
-            tf = (*it).t;
-            if (this->myFlowPacket.p == 1)
-            {
-                computeOpticFlow(&this->myFlowPacket, &this->sae_on, &this->myFlowState);
-            }
-            else
-            {
-                computeOpticFlow(&this->myFlowPacket, &this->sae_off, &this->myFlowState);
-            }
-            if (this->myFlowPacket.valid)
-            {
-                float flow_mag = sqrtf(this->myFlowPacket.u * this->myFlowPacket.u + this->myFlowPacket.v * this->myFlowPacket.v);
-            }
-            else
-            {
-                this->total_flow_rejected_++;
-                continue;
-            }
-
-            // Find rate in center of fitted plane
-
-            rates = this->myRates->find_average_rate(this->myFlowPacket.tP);
-            /*
-            ROS_INFO("p %f", rates.p);
-            ROS_INFO("q %f", rates.q);
-            ROS_INFO("r %f", rates.r);
-            ROS_INFO("t %li", rates.ts);
-            */
-            // Derotate the flow
-            // Normalize the x,y coordinates
-            x_nor = (this->myFlowPacket.x / 120.f) - 1.f;
-            y_nor = (this->myFlowPacket.y / 90.f) - 1.f;
-
-            rotational_u = -rates.r * (x_nor * x_nor + 1.f) + y_nor * (rates.p + rates.q * x_nor);
-            rotational_v = rates.q * (1.f + y_nor * y_nor) - x_nor * (rates.p + rates.r * y_nor);
-
-            float mag_OF = 0.f, mag_OF_rot = 0.f, ang_OF = 0.f, ang_OF_rot = 0.f, OF_proj = 0.f, OF_der_pre = 0.f, OF_der = 0.f, u_der = 0.f, v_der = 0.f, pos_ang_OF_rot = 0.f, pos_ang_OF = 0.f;
-
-            // Angle of optic flow
-            ang_OF = atan2(this->myFlowPacket.v, this->myFlowPacket.u);
-            /*
-            float derotatedU = this->myFlowPacket.u - rotational_u;
-            float derotatedV = this->myFlowPacket.v - rotational_v;
-            */
-            // Angle of rotational flow
-            ang_OF_rot = atan2(rotational_v, rotational_u);
-
-            // Magnitude of optic flow
-            mag_OF = hypot(this->myFlowPacket.u, this->myFlowPacket.v);
-
-            // Magnitude of rotational flow
-            mag_OF_rot = hypot(rotational_u, rotational_v);
-
-            // Map to only positive angles
-            if (ang_OF_rot < 0)
-            {
-                pos_ang_OF_rot = abs(2 * M_PI - abs(ang_OF_rot));
-            }
-            else
-            {
-                pos_ang_OF_rot = abs(ang_OF_rot);
-            }
-
-            if (ang_OF < 0)
-            {
-                pos_ang_OF = abs(2 * M_PI - abs(ang_OF));
-            }
-            else
-            {
-                pos_ang_OF = abs(ang_OF);
-            }
-
-            // Project rotational component onto optic flow
-            OF_proj = mag_OF_rot * cos(abs(pos_ang_OF_rot - pos_ang_OF));
-            OF_der_pre = mag_OF - OF_proj;
-
-            // Map to only positive angles
-            if (OF_der_pre > 0)
-            {
-                OF_der = OF_der_pre;
-            }
-            else
-            {
-                OF_der = 0;
-            }
-
-            // Return to (u,v) notation
-            u_der = OF_der * cos(pos_ang_OF);
-            v_der = OF_der * sin(pos_ang_OF);
-
-            derotate_mag = rotational_u * rotational_u + rotational_v * rotational_v;
-
-            // Publish the Optic flow
-            dvs_of_msg::FlowPacketMsg OFmsg_;
-            OFmsg_.x = this->myFlowPacket.x;
-            OFmsg_.y = this->myFlowPacket.y;
-            OFmsg_.t = this->myFlowPacket.t;
-            OFmsg_.p = this->myFlowPacket.p;
-            OFmsg_.u = u_der;
-            OFmsg_.v = v_der;
-            OFmsg_.ux = this->myFlowPacket.ux;
-            OFmsg_.uy = this->myFlowPacket.uy;
-
-            PacketPub_.flowpacketmsgs.push_back(OFmsg_);
-            PacketPub_.height = 180;
-            PacketPub_.width = 240;
-
-            // Output OF to .txt file
-            this->storeEventsFlow(u_der, v_der, derotate_mag, rates, rotational_u, rotational_v, ang_OF);
-
-            // Check if rotation is too large
-            if (derotate_mag > this->myFlowState.vMax * this->myFlowState.vMax)
-            {
-                this->total_rotation_rejected_++;
-                continue;
-            }
+            return 1;
         }
-
-        float comp_time = timer.toc();
-        if (ON_OFF_PROC == true)
+        else if ((((flow.x < 120 && flow.u > 0) || (flow.x > 120 && flow.u <= 0))) && (((flow.y < 90 && flow.v > 0) || (flow.y > 90 && flow.v <= 0))))
         {
-            // std::cout << "\t     -> Processing time: " << (comp_time - time_since_last)/SECONDS_TO_MICROSECONDS << " seconds" << std::endl;
+            return 0;
+        }
+        else
+        {
+            return NULL;
         }
     }
 
-    Server::Server(ros::NodeHandle &nh, ros::NodeHandle nh_private) : nh_(nh)
+ 
+
+
+/**
+ * Get the flow vectors
+ */
+
+void OpticFlow::computeOpticFlowVectors(std::vector<Events> *myEventsFOV, std::vector<IMU> *myIMU)
+{
+    rates_t rates;
+
+    std::mutex derot_mutex;
+
+    float rotational_u = 0.f, rotational_v = 0.f;
+
+    float x_nor, y_nor;
+
+    float derotate_u = 0.f, derotate_v = 0.f;
+    float derotate_mag = 0.0f;
+
+    std::vector<Events>::iterator it = myEventsFOV->begin();
+    uint64_t t0 = (*it).t;
+    uint64_t tf;
+    Timer<std::chrono::microseconds> timer;
+    float time_since_last = timer.toc();
+    timer.tic();
+
+    
+
+
+    for (; it != myEventsFOV->end(); it++)
     {
-        // Setup subscribers and publishers
-        event_sub_ = nh_.subscribe("dvs/events", 1, &Server::eventsCallback, this);
-        imu_sub_ = nh_.subscribe("dvs/imu", 1, &Server::imuCallback, this);
-        foe_sub = nh_.subscribe("/FoEx", 1, &Server::foeCallback, this);
-
-        OF_pub_ = nh_.advertise<dvs_of_msg::FlowPacketMsgArray>("/OpticFlow", 1);
-
-        // data record
-        std::string myDate = currentDateTime();
-        std::string ID1("DVS_recording_");
-        std::string ID2("IMU_recording_");
-        std::string ID3("OF_LOGFILE_");
-        std::string filename1 = ID1 + myDate + ".txt";
-        std::string filename2 = ID2 + myDate + ".txt";
-        std::string filename3 = ID3 + myDate + ".txt";
-        DVS_rec_file.open(filename1);
-        IMU_rec_file.open(filename2);
-
-        myOpticFlow = new OpticFlow(DIMX, DIMY);
-        myOpticFlow->setLogFileName(filename3);
-    }
-
-    Server::~Server()
-    {
-        DVS_rec_file.close();
-        IMU_rec_file.close();
-        myOpticFlow->~OpticFlow();
-    }
-
-    void Server::foeCallback(const std_msgs::Int32::ConstPtr &msg)
-    {
-        // Store FoE x coordinate in variable
-        myOpticFlow->FoE_x = msg->data;
-    }
-
-    void Server::imuCallback(const sensor_msgs::Imu::ConstPtr &msg)
-    {
-        myIMU.clear();
-
-        if (myIMU.empty())
+        this->myFlowPacket.x = (*it).x;
+        this->myFlowPacket.y = (*it).y;
+        this->myFlowPacket.p = (*it).p;
+        this->myFlowPacket.t = (*it).t;
+        // software based refractory period check
+        if (this->myFlowPacket.t < this->sae_on.buffer2D[this->myFlowPacket.x][this->myFlowPacket.y] + this->myFlowState.refPeriod ||
+            this->myFlowPacket.t < this->sae_off.buffer2D[this->myFlowPacket.x][this->myFlowPacket.y] + this->myFlowState.refPeriod)
         {
-            IMU imu_;
-            imu_.t = (uint64_t)(msg->header.stamp.toNSec() / 1000);
-            if (imu_.t > 1e5)
-            {
-                imu_.acc_x = (double)(msg->linear_acceleration.x);
-                imu_.acc_y = (double)(msg->linear_acceleration.y);
-                imu_.acc_z = (double)(msg->linear_acceleration.z);
-
-                imu_.gyr_x = (float)(msg->angular_velocity.x);
-                imu_.gyr_y = (float)(msg->angular_velocity.y);
-                imu_.gyr_z = (float)(msg->angular_velocity.z);
-
-                myIMU.push_back(imu_);
-            }
+            continue;
+        }
+        tf = (*it).t;
+        if (this->myFlowPacket.p == 1)
+        {
+            computeOpticFlow(&this->myFlowPacket, &this->sae_on, &this->myFlowState);
+        }
+        else
+        {
+            computeOpticFlow(&this->myFlowPacket, &this->sae_off, &this->myFlowState);
+        }
+        if (this->myFlowPacket.valid)
+        {
+            float flow_mag = sqrtf(this->myFlowPacket.u * this->myFlowPacket.u + this->myFlowPacket.v * this->myFlowPacket.v);
+        }
+        else
+        {
+            this->total_flow_rejected_++;
+            continue;
         }
 
-        if (!myIMU.empty())
-        {
-            myOpticFlow->myRates->log_rates(&myIMU);
-            // ROS_INFO("imu");
-        }
-
-        IMU_rec_file << (msg->header.stamp.toNSec() / 1000) << ",";
-        IMU_rec_file << (double)msg->linear_acceleration.x << ",";
-        IMU_rec_file << (double)msg->linear_acceleration.y << ",";
-        IMU_rec_file << (double)msg->linear_acceleration.z << ",";
-        IMU_rec_file << (float)msg->angular_velocity.x << ",";
-        IMU_rec_file << (float)msg->angular_velocity.y << ",";
-        IMU_rec_file << (float)msg->angular_velocity.z << std::endl;
-    }
-
-    void Server::eventsCallback(const dvs_msgs::EventArray::ConstPtr &msg)
-    {
         
-        myEvents.clear();
 
-        if (myEvents.empty())
+        // Find rate in center of fitted plane
+
+        rates = this->myRates->find_average_rate(this->myFlowPacket.tP);
+        /*
+        ROS_INFO("p %f", rates.p);
+        ROS_INFO("q %f", rates.q);
+        ROS_INFO("r %f", rates.r);
+        ROS_INFO("t %li", rates.ts);
+        */
+        // Derotate the flow
+        // Normalize the x,y coordinates
+        x_nor = (this->myFlowPacket.x / 120.f) - 1.f;
+        y_nor = (this->myFlowPacket.y / 90.f) - 1.f;
+
+        rotational_u = -rates.r * (x_nor * x_nor + 1.f) + y_nor * (rates.p + rates.q * x_nor);
+        rotational_v = rates.q * (1.f + y_nor * y_nor) - x_nor * (rates.p + rates.r * y_nor);
+
+        float mag_OF = 0.f, mag_OF_rot = 0.f, ang_OF = 0.f, ang_OF_rot = 0.f, OF_proj = 0.f, OF_der_pre = 0.f, OF_der = 0.f, u_der = 0.f, v_der = 0.f, pos_ang_OF_rot = 0.f, pos_ang_OF = 0.f;
+
+        // Angle of optic flow
+        ang_OF = atan2(this->myFlowPacket.v, this->myFlowPacket.u);
+        /*
+        float derotatedU = this->myFlowPacket.u - rotational_u;
+        float derotatedV = this->myFlowPacket.v - rotational_v;
+        */
+        // Angle of rotational flow
+        ang_OF_rot = atan2(rotational_v, rotational_u);
+
+        // Magnitude of optic flow
+        mag_OF = hypot(this->myFlowPacket.u, this->myFlowPacket.v);
+
+        // Magnitude of rotational flow
+        mag_OF_rot = hypot(rotational_u, rotational_v);
+
+        // Map to only positive angles
+        if (ang_OF_rot < 0)
         {
-            for (int i = 0; i < msg->events.size(); ++i)
+            pos_ang_OF_rot = abs(2 * M_PI - abs(ang_OF_rot));
+        }
+        else
+        {
+            pos_ang_OF_rot = abs(ang_OF_rot);
+        }
+
+        if (ang_OF < 0)
+        {
+            pos_ang_OF = abs(2 * M_PI - abs(ang_OF));
+        }
+        else
+        {
+            pos_ang_OF = abs(ang_OF);
+        }
+
+        // Project rotational component onto optic flow
+        OF_proj = mag_OF_rot * cos(abs(pos_ang_OF_rot - pos_ang_OF));
+        OF_der_pre = mag_OF - OF_proj;
+
+        // Map to only positive angles
+        if (OF_der_pre > 0)
+        {
+            OF_der = OF_der_pre;
+        }
+        else
+        {
+            OF_der = 0;
+        }
+
+        // Return to (u,v) notation
+        u_der = OF_der * cos(pos_ang_OF);
+        v_der = OF_der * sin(pos_ang_OF);
+
+        derotate_mag = rotational_u * rotational_u + rotational_v * rotational_v;
+
+        // Publish the Optic flow
+        dvs_of_msg::FlowPacketMsg OFmsg_;
+        OFmsg_.x = this->myFlowPacket.x;
+        OFmsg_.y = this->myFlowPacket.y;
+        OFmsg_.t = this->myFlowPacket.t;
+        OFmsg_.p = this->myFlowPacket.p;
+        OFmsg_.u = u_der;
+        OFmsg_.v = v_der;
+        OFmsg_.ux = this->myFlowPacket.ux;
+        OFmsg_.uy = this->myFlowPacket.uy;
+
+        PacketPub_.flowpacketmsgs.push_back(OFmsg_);
+        PacketPub_.height = 180;
+        PacketPub_.width = 240;
+
+        // Output OF to .txt file
+        this->storeEventsFlow(u_der, v_der, derotate_mag, rates, rotational_u, rotational_v, ang_OF);
+
+        // Check if rotation is too large
+        if (derotate_mag > this->myFlowState.vMax * this->myFlowState.vMax)
+        {
+
+            this->total_rotation_rejected_++;
+            continue;
+        }
+
+        if (OpticFlow::checkVectorDirection(this->myFlowPacket) == 1) {
+            countpackage.Outward++;
+        }
+        else {
+            countpackage.Inward++;
+        };
+    };
+
+  
+
+
+
+
+    float comp_time = timer.toc();
+    if (ON_OFF_PROC == true)
+    {
+        /// std::cout << "\t     -> Processing time: " << (comp_time - time_since_last)/SECONDS_TO_MICROSECONDS << " seconds" << std::endl;
+    }
+}
+
+Server::Server(ros::NodeHandle &nh, ros::NodeHandle nh_private) : nh_(nh)
+{
+    // Setup subscribers and publishers
+    event_sub_ = nh_.subscribe("dvs/events", 1, &Server::eventsCallback, this);
+    imu_sub_ = nh_.subscribe("dvs/imu", 1, &Server::imuCallback, this);
+    foe_sub = nh_.subscribe("/FoEx", 1, &Server::foeCallback, this);
+
+    OF_pub_ = nh_.advertise<dvs_of_msg::FlowPacketMsgArray>("/OpticFlow", 1);
+
+    CountPublish = nh_.advertise<dvs_of_msg::VectorCount>("/CountVec", 1);
+
+    // data record
+    std::string myDate = currentDateTime();
+    std::string ID1("DVS_recording_");
+    std::string ID2("IMU_recording_");
+    std::string ID3("OF_LOGFILE_");
+    std::string filename1 = ID1 + myDate + ".txt";
+    std::string filename2 = ID2 + myDate + ".txt";
+    std::string filename3 = ID3 + myDate + ".txt";
+    DVS_rec_file.open(filename1);
+    IMU_rec_file.open(filename2);
+
+    myOpticFlow = new OpticFlow(DIMX, DIMY);
+    myOpticFlow->setLogFileName(filename3);
+}
+
+Server::~Server()
+{
+    DVS_rec_file.close();
+    IMU_rec_file.close();
+    myOpticFlow->~OpticFlow();
+}
+
+void Server::foeCallback(const std_msgs::Int32::ConstPtr &msg)
+{
+    // Store FoE x coordinate in variable
+    myOpticFlow->FoE_x = msg->data;
+}
+
+void Server::imuCallback(const sensor_msgs::Imu::ConstPtr &msg)
+{
+    myIMU.clear();
+
+    if (myIMU.empty())
+    {
+        IMU imu_;
+        imu_.t = (uint64_t)(msg->header.stamp.toNSec() / 1000);
+        if (imu_.t > 1e5)
+        {
+            imu_.acc_x = (double)(msg->linear_acceleration.x);
+            imu_.acc_y = (double)(msg->linear_acceleration.y);
+            imu_.acc_z = (double)(msg->linear_acceleration.z);
+
+            imu_.gyr_x = (float)(msg->angular_velocity.x);
+            imu_.gyr_y = (float)(msg->angular_velocity.y);
+            imu_.gyr_z = (float)(msg->angular_velocity.z);
+
+            myIMU.push_back(imu_);
+        }
+    }
+
+    if (!myIMU.empty())
+    {
+        myOpticFlow->myRates->log_rates(&myIMU);
+        // ROS_INFO("imu");
+    }
+
+    IMU_rec_file << (msg->header.stamp.toNSec() / 1000) << ",";
+    IMU_rec_file << (double)msg->linear_acceleration.x << ",";
+    IMU_rec_file << (double)msg->linear_acceleration.y << ",";
+    IMU_rec_file << (double)msg->linear_acceleration.z << ",";
+    IMU_rec_file << (float)msg->angular_velocity.x << ",";
+    IMU_rec_file << (float)msg->angular_velocity.y << ",";
+    IMU_rec_file << (float)msg->angular_velocity.z << std::endl;
+}
+
+void Server::eventsCallback(const dvs_msgs::EventArray::ConstPtr &msg)
+{
+
+    myEvents.clear();
+
+    if (myEvents.empty())
+    {
+        for (int i = 0; i < msg->events.size(); ++i)
+        {
+            Events e;
+            e.t = (int64_t)(msg->events[i].ts.toNSec() / 1000);
+            if (e.t > 1e5)
             {
-                Events e;
-                e.t = (int64_t)(msg->events[i].ts.toNSec() / 1000);
-                if (e.t > 1e5)
+                e.x = (uint8_t)(msg->events[i].x);
+                e.y = (uint8_t)(msg->events[i].y);
+                e.p = (uint8_t)(msg->events[i].polarity);
+                if (e.x > mX - X_FOV_RADIUS && e.x < mX + X_FOV_RADIUS)
                 {
-                    e.x = (uint8_t)(msg->events[i].x);
-                    e.y = (uint8_t)(msg->events[i].y);
-                    e.p = (uint8_t)(msg->events[i].polarity);
-                    if (e.x > mX - X_FOV_RADIUS && e.x < mX + X_FOV_RADIUS)
+                    if (e.y > mY - Y_FOV_RADIUS && e.y < mY + Y_FOV_RADIUS)
                     {
-                        if (e.y > mY - Y_FOV_RADIUS && e.y < mY + Y_FOV_RADIUS)
-                        {
-                            DVS_rec_file << e.t << ",";
-                            DVS_rec_file << e.x << ",";
-                            DVS_rec_file << e.y << ",";
-                            DVS_rec_file << e.p << std::endl;
-                            myEvents.push_back(e);
-                        }
+                        DVS_rec_file << e.t << ",";
+                        DVS_rec_file << e.x << ",";
+                        DVS_rec_file << e.y << ",";
+                        DVS_rec_file << e.p << std::endl;
+                        myEvents.push_back(e);
                     }
                 }
             }
+        }
 
-            if (!myEvents.empty())
-            {
+        if (!myEvents.empty())
+        {
 
-                myOpticFlow->computeOpticFlowVectors(&myEvents, &myIMU);
+            myOpticFlow->computeOpticFlowVectors(&myEvents, &myIMU);
 
+            OF_pub_.publish(PacketPub_);
+            CountPublish.publish(countpackage);
 
+            countpackage.Inward = 0;
+            countpackage.Outward = 0;
+            PacketPub_.flowpacketmsgs.clear();
 
-
-
-                if (PacketPub_.flowpacketmsgs.size() > 0)
-                {
-                    OF_pub_.publish(PacketPub_);
-                    PacketPub_.flowpacketmsgs.clear();
-                }
-
-     
-                // ROS_INFO("dvs");
-            }
+            // ROS_INFO("dvs");
         }
     }
+}
 
 } // namespace

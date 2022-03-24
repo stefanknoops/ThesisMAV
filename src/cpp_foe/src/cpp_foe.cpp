@@ -470,7 +470,7 @@ void estimationServer()
   std::vector<FlowPacket> optic_flow;
   int buffersize = final_buffer.size();
   // ROS_INFO("estimationserver buffersize: %i", buffersize);
-  if (final_buffer.size() > 5)
+  if (final_buffer.size() > 5) //min amount of vectors required
   {
 
     optic_flow = fillOpticFlowArray();
@@ -486,18 +486,8 @@ void estimationServer()
 
     prev_time = ros::Time::now().toSec();
 
-    FoE_msg.data.resize(2);
-    int32_t pub_x;
-    pub_x = (int64_t)(FoE_x);
-    int32_t pub_y;
-    pub_y = (int64_t)(FoE_y);
-    std::vector<int64_t> msgArray = {pub_x, pub_y};
-
-    OF_rec_file << ros::Time::now().toNSec() << "," << pub_x << "," << pub_y << std::endl;
-
-    FoE_msg.data = msgArray;
+ 
     // Publish the FOE onto its topic
-    FoE_pub.publish(FoE_msg);
   }
 }
 
@@ -528,6 +518,12 @@ void opticflowCallback(const dvs_of_msg::FlowPacketMsgArray::ConstPtr &msg) // g
 
     // Run FOE estimation
     estimationServer();
+
+
+    FoE_msg.x = (int)FoE_x;
+    FoE_msg.y = (int)FoE_y;
+    FoE_pub.publish(FoE_msg);
+
     // Add 0.5 to FoE_x for truncating by compiler to integer
     // double calctime = ros::Time::now().toSec() - beforetime;
 
@@ -570,7 +566,7 @@ int main(int argc, char **argv)
 
   // Initialize subscribers and publishers
   ros::Subscriber sub = n.subscribe("/OpticFlow", 1, opticflowCallback);
-  FoE_pub = n.advertise<std_msgs::Int64MultiArray>("/FoE", 1);
+  FoE_pub = n.advertise<cpp_foe::FoE>("/FoE", 1);
 
   std::string myDate = currentDateTime();
 

@@ -40,6 +40,8 @@
 #include "dvs_of_msg/FlowPacketMsgArray.h"
 #include "std_msgs/Int64.h"
 #include "std_msgs/Int64MultiArray.h"
+#include "cpp_foe/FoE.h"
+#include "std_msgs/Int16.h"
 
 
 // Required by FOE estimation
@@ -57,7 +59,7 @@ std::mutex prepMutex;
 
 // FoE publisher and message
 ros::Publisher FoE_pub;
-std_msgs::Int64MultiArray FoE_msg;
+cpp_foe::FoE FoE_msg;
 double FoE_x;
 double FoE_y;
 
