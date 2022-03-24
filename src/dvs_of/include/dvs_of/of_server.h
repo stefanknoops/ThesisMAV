@@ -87,6 +87,7 @@ namespace dvs_of
         int32_t getLength();
         void resetMedianFilters();
 
+
         // ON-Line processing of the incoming data
         void log_rates(std::vector<IMU> *myIMU);
         rates_t find_closest_rate(int64_t ts);
@@ -138,6 +139,18 @@ namespace dvs_of
         void computeOpticFlowVectors(std::vector<Events> *myEventsFOV, std::vector<IMU> *myIMU);
         void setLogFileName(std::string filename);
         bool checkVectorDirection(FlowPacket flow);
+        void derotateFlow(dvs_of::FlowPacket FlowPacket);
+        bool derotate_flag = false;
+        float u_der;
+        float v_der;
+        float rotational_u = 0.f, rotational_v = 0.f;
+
+        float x_nor, y_nor;
+
+        float derotate_u = 0.f, derotate_v = 0.f;
+        float derotate_mag = 0.0f;
+        float ang_OF;
+        rates_t rates;
 
       
 
