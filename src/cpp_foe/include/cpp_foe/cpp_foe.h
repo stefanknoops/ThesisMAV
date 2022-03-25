@@ -99,7 +99,7 @@ void log_OF(std::vector<FlowPacket> *myOF);
 static std::vector<FlowPacket> fillOpticFlowArray();
 
 void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double  *FoE_x, double *FoE_y);
-std::ofstream OF_rec_file;
+std::ofstream FoE_rec_file;
 
 
 inline const std::string currentDateTime(void) {

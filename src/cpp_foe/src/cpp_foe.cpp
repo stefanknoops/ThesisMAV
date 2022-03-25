@@ -535,6 +535,7 @@ void opticflowCallback(const dvs_of_msg::FlowPacketMsgArray::ConstPtr &msg) // g
     FoE_msg.x = (int)FoE_x;
     FoE_msg.y = (int)FoE_y;
     FoE_pub.publish(FoE_msg);
+    FoE_rec_file << ros::Time::now().toNSec() << "," << FoE_x << "," << FoE_y << std::endl;
 
     // Add 0.5 to FoE_x for truncating by compiler to integer
     // double calctime = ros::Time::now().toSec() - beforetime;
@@ -583,7 +584,7 @@ int main(int argc, char **argv)
   std::string myDate = currentDateTime();
 
   std::string filename = "FoE_recording_" + myDate + ".txt";
-  OF_rec_file.open(filename);
+  FoE_rec_file.open(filename);
 
   ros::spin();
 
