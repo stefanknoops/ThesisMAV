@@ -32,6 +32,8 @@
 #include <iostream>
 #include <fstream>
 #include <mutex>
+#include <numeric>
+
 
 #include "ros/ros.h"
 
@@ -60,6 +62,9 @@ std::mutex prepMutex;
 // FoE publisher and message
 ros::Publisher FoE_pub;
 cpp_foe::FoE FoE_msg;
+
+std::vector<double> FoE_hist_x {};
+std::vector<double> FoE_hist_y {};
 double FoE_x;
 double FoE_y;
 

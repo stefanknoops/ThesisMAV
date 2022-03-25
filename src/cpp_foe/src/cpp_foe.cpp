@@ -28,6 +28,8 @@
 #include <cpp_foe/cpp_foe.h>
 #include <random>
 #include <ros/console.h>
+#include <numeric>
+
 
 //#include "estimateFoECPP.h"
 
@@ -450,8 +452,18 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
     // ROS_INFO("FOEY %lf", FOEY);
   }
 
-  *FoE_x = FOEX / (double)BestHull.size();
-  *FoE_y = FOEY / (double)BestHull.size();
+  FoE_hist_x.push_back(FOEX / (double)BestHull.size());
+  FoE_hist_y.push_back(FOEY / (double)BestHull.size());
+
+  *FoE_x = std::accumulate(FoE_hist_x.begin(), FoE_hist_x.end(),0.0) / FoE_hist_x.size();
+  *FoE_y = std::accumulate(FoE_hist_y.begin(), FoE_hist_y.end(),0.0) / FoE_hist_y.size();
+ 
+  if (FoE_hist_x.size() > 5) {
+    FoE_hist_x.erase(FoE_hist_x.begin());
+    FoE_hist_y.erase(FoE_hist_y.begin());
+
+
+  }
 
   // ROS_INFO("test2 %i", BestHull.size());
 
