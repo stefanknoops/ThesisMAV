@@ -454,19 +454,15 @@ namespace dvs_of
         freeFlowStateMem(&this->myFlowState);
     }
 
-    bool OpticFlow::checkVectorDirection(FlowPacket flow)
+    void OpticFlow::checkVectorDirection(FlowPacket flow)
     {
-        if ((((flow.x < 120 && flow.u < 0) || (flow.x > 120 && flow.u >= 0))) && (((flow.y < 90 && flow.v < 0) || (flow.y > 90 && flow.v >= 0))))
+        if (((flow.x < 120 && flow.u < 0) || (flow.x > 120 && flow.u >= 0)) && ((flow.y < 90 && flow.v < 0) || (flow.y > 90 && flow.v >= 0)))
         {
-            return 1;
+            countpackage.Forward++;
         }
-        else if ((((flow.x < 120 && flow.u > 0) || (flow.x > 120 && flow.u <= 0))) && (((flow.y < 90 && flow.v > 0) || (flow.y > 90 && flow.v <= 0))))
+        else if (((flow.x < 120 && flow.u > 0) || (flow.x > 120 && flow.u <= 0)) && ((flow.y < 90 && flow.v > 0) || (flow.y > 90 && flow.v <= 0)))
         {
-            return 0;
-        }
-        else
-        {
-            return NULL;
+            countpackage.Backward++;
         }
     }
 
@@ -599,8 +595,19 @@ namespace dvs_of
                 continue;
             }
 
-            derotateFlow(this->myFlowPacket);
+            bool derotate = false;
 
+            if (derotate)
+            {
+                derotateFlow(this->myFlowPacket);
+            }
+            else
+            {
+                u_der = this->myFlowPacket.u;
+                v_der = this->myFlowPacket.v;
+            }
+
+            // d
 
             // Publish the Optic flow
 
@@ -621,6 +628,8 @@ namespace dvs_of
             // Output OF to .txt file
             this->storeEventsFlow(u_der, v_der, derotate_mag, rates, rotational_u, rotational_v, ang_OF);
 
+            OpticFlow::checkVectorDirection(this->myFlowPacket);
+
             // Check if rotation is too large
 
             if (derotate_flag)
@@ -628,15 +637,6 @@ namespace dvs_of
                 total_flow_rejected_++;
                 continue;
             }
-
-            if (OpticFlow::checkVectorDirection(this->myFlowPacket) == 1)
-            {
-                countpackage.Outward++;
-            }
-            else
-            {
-                countpackage.Inward++;
-            };
         };
 
         float comp_time = timer.toc();
@@ -760,8 +760,8 @@ namespace dvs_of
                 OF_pub_.publish(PacketPub_);
                 CountPublish.publish(countpackage);
 
-                countpackage.Inward = 0;
-                countpackage.Outward = 0;
+                countpackage.Backward = 0;
+                countpackage.Forward = 0;
                 PacketPub_.flowpacketmsgs.clear();
 
                 // ROS_INFO("dvs");

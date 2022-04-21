@@ -51,7 +51,7 @@
 #define ON_OFF_PROC     true // true: on-line
 
 #define X_FOV_RADIUS    120
-#define Y_FOV_RADIUS    40 // max 90
+#define Y_FOV_RADIUS    90 // max 90
 
 #define DIMX            240
 #define DIMY            180

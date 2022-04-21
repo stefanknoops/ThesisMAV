@@ -30,7 +30,6 @@
 #include <ros/console.h>
 #include <numeric>
 
-
 //#include "estimateFoECPP.h"
 
 // Fill OF array with values
@@ -70,14 +69,17 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
   std::vector<std::vector<double>> norm_lines(ArraySize, std::vector<double>{0.0, 0.0, 0.0});
   std::vector<std::vector<double>> all_rules(ArraySize, std::vector<double>{0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
 
-  std::vector<std::vector<double>> InitialHullLines = {{0.0, 1.0, -1.0}, {1.0, 0.0, -1.0}, {0.0, 1.0, -ResolutionY}, {1.0, 0.0, -ResolutionX}};
-  std::vector<std::vector<double>> InitialHullRules = {{0.0, 1.0, -1.0, -1.0, 0.0, 0.0}, {1.0, 0.0, -1.0, 0.0, -1.0, 0.0}, {0.0, 1.0, -ResolutionY, 1.0, 0.0, 0.0}, {1.0, 0.0, -ResolutionX, 0.0, 1.0, 0.0}};
-  std::vector<std::vector<double>> InitialHullPoints = {{1.0, 1.0}, {1.0, ResolutionY}, {ResolutionX, ResolutionY}, {ResolutionX, 1.0}};
+  std::vector<std::vector<double>> InitialHullLines = {{0.0, 1.0, 0.0}, {1.0, 0.0, 0.0}, {0.0, 1.0, -ResolutionY}, {1.0, 0.0, -ResolutionX}};
+  std::vector<std::vector<double>> InitialHullRules = {{0.0, 1.0, 0.0, -1.0, 0.0, 0.0}, {1.0, 0.0, 0.0, 0.0, -1.0, 0.0}, {0.0, 1.0, -ResolutionY, 1.0, 0.0, 0.0}, {1.0, 0.0, -ResolutionX, 0.0, 1.0, 0.0}};
+  std::vector<std::vector<double>> InitialHullPoints = {{0.0, 0.0}, {0.0, ResolutionY}, {ResolutionX, ResolutionY}, {ResolutionX, 0.0}};
   std::vector<std::vector<double>> BestHull = InitialHullPoints;
+  std::vector<std::vector<double>> BestHullLines = InitialHullLines;
+
   std::vector<std::vector<double>> HullLines;
   std::vector<std::vector<double>> HullRules;
   std::vector<std::vector<double>> HullPoints = InitialHullPoints;
   int MaxScore = 0;
+  int MinScore = 10000;
   bool Illegal;
 
   int AmountOfIterations = 100;
@@ -93,7 +95,7 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
   //  Rules: [A, B, C, sign(v), sign(u)]
   //  Initialize optical flow variables
   //  Write into ax + by + c = 0 ==> perp equation = bx-ay + lambda= 0
-
+  // ROS_INFO("New iteration");
   for (int i = 0; i < ArraySize; i++)
   {
 
@@ -104,21 +106,27 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
     norm_lines[i][0] = B;
     norm_lines[i][1] = -A;
 
+    double D = -(B * OpticFlow[i].x + -A * OpticFlow[i].y);
+
     // norm_lines[i][2] = (OpticFlow[i].x * (OpticFlow[i].y + OpticFlow[i].v) - (OpticFlow[i].x + OpticFlow[i].u) * OpticFlow[i].y);
-    norm_lines[i][2] = C;
+    // ROS_INFO("Vector = %lf x + %lf y + %lf = 0",A,B,C);
+    // ROS_INFO("Normal = %lf x + %lf y + %lf = 0",B,-A,D);
 
-    // ROS_INFO("vector = %lf u + %lf v @ x = %lf and y = %lf", OpticFlow[i].u,OpticFlow[i].v,(double)OpticFlow[i].x,(double)OpticFlow[i].y);
-    // ROS_INFO("Norm line = %lf x + %lf y + %lf", B,-A,C);
+    norm_lines[i][2] = D;
+
+    //std::cout << "OF vector = " << A << "\t" << B << "\t" << C << std::endl;
+    //std::cout << "Normal vector = " << B << "\t" << -A << "\t" << D << std::endl;
+
+
   }
-
   //  Create a list with the rules for all vectors
   //  Rule: [A, B, C, sign(v), sign(u)] // not sure what rules are
   //  Put line descriptions in same format for halfplane check (change sign if negative)
 
   for (int i = 0; i < ArraySize; i++)
   {
-    double sign_v = signum(OpticFlow[i].v); // source: google cpp signum
     double sign_u = signum(OpticFlow[i].u); // source: google cpp signum
+    double sign_v = signum(OpticFlow[i].v); // source: google cpp signum
     if (norm_lines[i][0] < 0)
     {
       all_rules[i] = std::vector<double>{-norm_lines[i][0], -norm_lines[i][1], -norm_lines[i][2], sign_v, sign_u};
@@ -154,14 +162,14 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
 
     bool StopSearch = false;
     int StopCount = 0;
-    std::vector<double> RandomVectorRule;
+    std::vector<double> RandomNormalRule;
 
     // set all vectors to not tried
 
     while (!StopSearch) // while not stopping search
     {                   // take random vector and check whether it has not been used yet
 
-      int RandomVectorIndex = RandomNumberDistribution(RandomNumber);
+      int RandomNormalIndex = RandomNumberDistribution(RandomNumber);
       if (std::all_of(VectorTried.begin(), VectorTried.end(), [](int x)
                       { return x == 1; }))
       {
@@ -171,9 +179,9 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
       else
       {
 
-        while ((VectorTried[RandomVectorIndex] == 1 || VectorInHull[RandomVectorIndex] == 1) && StopSearch == false)
+        while ((VectorTried[RandomNormalIndex] == 1 || VectorInHull[RandomNormalIndex] == 1) && StopSearch == false)
         {
-          RandomVectorIndex = RandomNumberDistribution(RandomNumber);
+          RandomNormalIndex = RandomNumberDistribution(RandomNumber);
         };
       };
 
@@ -182,30 +190,28 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
         break;
       }
 
-      // ROS_INFO("Random vector index = %i", RandomVectorIndex);
+      // ROS_INFO("Random vector index = %i", RandomNormalIndex);
 
-      VectorTried[RandomVectorIndex] = 1;
+      VectorTried[RandomNormalIndex] = 1;
 
       // see if all vectors are tried yet
 
       // choose vector
-      std::vector<double> RandomVector = norm_lines[RandomVectorIndex];
+      std::vector<double> RandomNormal = norm_lines[RandomNormalIndex];
+      //std::cout << "Random vector = " << RandomNormal[0] << "\t" << RandomNormal[1] << "\t" << RandomNormal[2] << std::endl;
 
-      double sign_u = signum(OpticFlow[RandomVectorIndex].u); // source: google cpp signum
+      double sign_u = signum(OpticFlow[RandomNormalIndex].u); // source: google cpp signum
+      double sign_v = signum(OpticFlow[RandomNormalIndex].v); // source: google cpp signum
 
-      double sign_v = signum(OpticFlow[RandomVectorIndex].v); // source: google cpp signum
       // put vector in standard format, add index
-      if (RandomVector[0] < 0.0)
+      if (RandomNormal[0] < 0.0)
       {
-        RandomVector[0] = -RandomVector[0];
-        RandomVector[1] = -RandomVector[1];
-        RandomVector[2] = -RandomVector[2];
 
-        RandomVectorRule = {RandomVector[0], RandomVector[1], RandomVector[2], sign_v, sign_u, (double)RandomVectorIndex};
+        RandomNormalRule = {-RandomNormal[0], -RandomNormal[1],-RandomNormal[2], sign_v, sign_u, (double)RandomNormalIndex};
       }
       else
       {
-        RandomVectorRule = {RandomVector[0], RandomVector[1], RandomVector[2], sign_v, sign_u, (double)RandomVectorIndex};
+        RandomNormalRule = {RandomNormal[0], RandomNormal[1], RandomNormal[2], sign_v, sign_u, (double)RandomNormalIndex};
       }
 
       bool AddCheck = false;
@@ -214,15 +220,15 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
       for (int i = 0; i < HullLines.size(); i++) // for all hull lines
       {
         // if not parallel
-        // std::vector<double> MergeMatrixC = {-HullLines[i][2], -RandomVector[2]};
+        // std::vector<double> MergeMatrixC = {-HullLines[i][2], -RandomNormal[2]};
 
         double CramerA = HullLines[i][0];
         double CramerB = HullLines[i][1];
         double CramerE = -HullLines[i][2];
 
-        double CramerC = RandomVector[0];
-        double CramerD = RandomVector[1];
-        double CramerF = -RandomVector[2];
+        double CramerC = RandomNormal[0];
+        double CramerD = RandomNormal[1];
+        double CramerF = -RandomNormal[2];
 
         // ROS_INFO("HL a %lf", HullLines[i][0]);
         // ROS_INFO("HL b %lf", HullLines[i][1]);
@@ -281,9 +287,12 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
           // if not violated, add to hull
           if (!Illegal && !AddCheck)
           {
-            HullLines.push_back(RandomVector);
-            HullRules.push_back(RandomVectorRule);
-            VectorInHull[RandomVectorIndex] = 1;
+            //std::cout << "RV: " << RandomNormal[0] << ", " << RandomNormal[1] << ", " << RandomNormal[2] << std::endl;
+            HullLines.push_back(RandomNormal);
+            int EndOfVector = HullLines.size()-1;
+            //std::cout << "HL" << HullLines[EndOfVector][0] << ",\t " << HullLines[EndOfVector][1] << ",\t " << HullLines[EndOfVector][2] << std::endl;
+            HullRules.push_back(RandomNormalRule);
+            VectorInHull[RandomNormalIndex] = 1;
             AddCheck = true;
           }
           // ROS_INFO("line 258 illegal? %i", Illegal);
@@ -438,6 +447,7 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
     {
       MaxScore = IterationScore;
       BestHull = HullPoints;
+      BestHullLines = HullLines;
     }
   }
 
@@ -448,31 +458,44 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
     // ROS_INFO("point %i: %lf, %lf", i, BestHull[i][0], BestHull[i][1]);
     FOEX = FOEX + BestHull[i][0];
     FOEY = FOEY + BestHull[i][1];
-    ////ROS_INFO("FOEX %lf", FOEX);
+    // ROS_INFO("FOEX %lf", FOEX);
     // ROS_INFO("FOEY %lf", FOEY);
   }
-
+  // std::cout << FOEX / (double)BestHull.size() << "," << FOEY / (double)BestHull.size() << std::endl;
   FoE_hist_x.push_back(FOEX / (double)BestHull.size());
   FoE_hist_y.push_back(FOEY / (double)BestHull.size());
 
-  *FoE_x = std::accumulate(FoE_hist_x.begin(), FoE_hist_x.end(),0.0) / FoE_hist_x.size();
-  *FoE_y = std::accumulate(FoE_hist_y.begin(), FoE_hist_y.end(),0.0) / FoE_hist_y.size();
- 
-  if (FoE_hist_x.size() > 5) {
+  *FoE_x = std::accumulate(FoE_hist_x.begin(), FoE_hist_x.end(), 0.0) / FoE_hist_x.size();
+  *FoE_y = std::accumulate(FoE_hist_y.begin(), FoE_hist_y.end(), 0.0) / FoE_hist_y.size();
+
+  if (FoE_hist_x.size() > 10)
+  {
     FoE_hist_x.erase(FoE_hist_x.begin());
     FoE_hist_y.erase(FoE_hist_y.begin());
-
-
   }
 
-  // ROS_INFO("test2 %i", BestHull.size());
+  int64_t current_time = ros::Time::now().toNSec();
 
-  // ROS_INFO("test %lf", test);
+  FoE_rec_file << current_time << "," << FOEX / (double)BestHull.size() << "," << FOEY / (double)BestHull.size() << std::endl;
 
-  // ROS_INFO("FOEX %lf", FOEX);
-  // ROS_INFO("FOEX %lf", *FoE_x);
-  // ROS_INFO("FOEY %lf", FOEY);
-  // ROS_INFO("FOEY %lf", *FoE_y);
+  for (int i = 0; i < BestHullLines.size(); i++)
+  {//std::cout << "besthull" << current_time << "," << BestHullLines[i][0] << "," << BestHullLines[i][1] << "," << BestHullLines[i][2] << std::endl;
+
+    HL_log_file << current_time << "," << BestHullLines[i][0] << "," << BestHullLines[i][1] << "," << BestHullLines[i][2] << std::endl;
+  }
+
+  for (int i = 0; i < BestHull.size(); i++)
+  {
+    HP_log_file << current_time << "," << BestHull[i][0] << "," << BestHull[i][1] << std::endl;
+  }
+
+  for (int i = 0; i < ArraySize; i++)
+  {
+    //std::cout << current_time << "," << 0 << "," << OpticFlow[i].x << "," << OpticFlow[i].y << "," << OpticFlow[i].u << "," << OpticFlow[i].v << std::endl;
+
+    FoE_flow_rec_file << current_time << "," << 0 << "," << OpticFlow[i].x << "," << OpticFlow[i].y << "," << OpticFlow[i].u << "," << OpticFlow[i].v << std::endl;
+    FoE_flow_rec_file << current_time << "," << 1 << "," << OpticFlow[i].x << "," << OpticFlow[i].y << "," << norm_lines[i][0] << "," << norm_lines[i][1] << std::endl;
+  }
 }
 
 void estimationServer()
@@ -482,7 +505,7 @@ void estimationServer()
   std::vector<FlowPacket> optic_flow;
   int buffersize = final_buffer.size();
   // ROS_INFO("estimationserver buffersize: %i", buffersize);
-  if (final_buffer.size() > 5) //min amount of vectors required
+  if (final_buffer.size() > 1) // min amount of vectors required
   {
 
     optic_flow = fillOpticFlowArray();
@@ -498,7 +521,6 @@ void estimationServer()
 
     prev_time = ros::Time::now().toSec();
 
- 
     // Publish the FOE onto its topic
   }
 }
@@ -531,11 +553,9 @@ void opticflowCallback(const dvs_of_msg::FlowPacketMsgArray::ConstPtr &msg) // g
     // Run FOE estimation
     estimationServer();
 
-
     FoE_msg.x = (int)FoE_x;
     FoE_msg.y = (int)FoE_y;
     FoE_pub.publish(FoE_msg);
-    FoE_rec_file << ros::Time::now().toNSec() << "," << FoE_x << "," << FoE_y << std::endl;
 
     // Add 0.5 to FoE_x for truncating by compiler to integer
     // double calctime = ros::Time::now().toSec() - beforetime;
@@ -585,6 +605,18 @@ int main(int argc, char **argv)
 
   std::string filename = "FoE_recording_" + myDate + ".txt";
   FoE_rec_file.open(filename);
+
+  std::string filename_flow = "FoE_flow_recording_" + myDate + ".txt";
+
+  FoE_flow_rec_file.open(filename_flow);
+
+  std::string filename_HP = "HP_recording" + myDate + ".txt";
+
+  HP_log_file.open(filename_HP);
+
+  std::string filename_HL = "HL_recording" + myDate + ".txt";
+
+  HL_log_file.open(filename_HL);
 
   ros::spin();
 

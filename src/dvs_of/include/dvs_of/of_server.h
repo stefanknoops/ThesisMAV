@@ -138,7 +138,7 @@ namespace dvs_of
         void storeEventsFlow(float d_u, float d_v, float mag, rates_t rates, float rot_u, float rot_v, float chck);
         void computeOpticFlowVectors(std::vector<Events> *myEventsFOV, std::vector<IMU> *myIMU);
         void setLogFileName(std::string filename);
-        bool checkVectorDirection(FlowPacket flow);
+        void checkVectorDirection(FlowPacket flow);
         void derotateFlow(dvs_of::FlowPacket FlowPacket);
         bool derotate_flag = false;
         float u_der;

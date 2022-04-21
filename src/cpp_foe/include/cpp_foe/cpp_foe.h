@@ -100,6 +100,12 @@ static std::vector<FlowPacket> fillOpticFlowArray();
 
 void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double  *FoE_x, double *FoE_y);
 std::ofstream FoE_rec_file;
+std::ofstream FoE_flow_rec_file;
+std::ofstream HP_log_file;
+std::ofstream HL_log_file;
+
+
+
 
 
 inline const std::string currentDateTime(void) {

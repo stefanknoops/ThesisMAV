@@ -1,2 +1,2 @@
-uint16 Inward
-uint16 Outward
+uint16 Forward
+uint16 Backward
