@@ -472,7 +472,7 @@ namespace dvs_of
 
         std::mutex derot_mutex;
 
-        float rotational_u = 0.f, rotational_v = 0.f;
+        //float rotational_u = 0.f, rotational_v = 0.f;
 
         float x_nor, y_nor;
 
@@ -488,8 +488,11 @@ namespace dvs_of
         x_nor = (FlowPacket.x / 120.f) - 1.f;
         y_nor = (FlowPacket.y / 90.f) - 1.f;
 
-        rotational_u = -rates.r * (x_nor * x_nor + 1.f) + y_nor * (rates.p + rates.q * x_nor);
-        rotational_v = rates.q * (1.f + y_nor * y_nor) - x_nor * (rates.p + rates.r * y_nor);
+
+        rotational_u = -(-rates.r * (x_nor * x_nor + 1.f) + y_nor * (rates.p + rates.q * x_nor));
+        rotational_v = -(rates.q * (1.f + y_nor * y_nor) - x_nor * (rates.p + rates.r * y_nor));
+
+        //std::cout << "rot_u = " << rotational_u << ", \t" << "rot_v = "<< rotational_v << std::endl;
 
         float mag_OF = 0.f, mag_OF_rot = 0.f, ang_OF = 0.f, ang_OF_rot = 0.f, OF_proj = 0.f, OF_der_pre = 0.f, OF_der = 0.f, u_der = 0.f, v_der = 0.f, pos_ang_OF_rot = 0.f, pos_ang_OF = 0.f;
 
@@ -541,6 +544,9 @@ namespace dvs_of
         // Return to (u,v) notation
         this->u_der = OF_der * cos(pos_ang_OF);
         this->v_der = OF_der * sin(pos_ang_OF);
+
+        //std::cout << "rot_u = " << rotational_u << ", \t" << "of u = "<< FlowPacket.u << std::endl;
+
 
         derotate_mag = rotational_u * rotational_u + rotational_v * rotational_v;
 
@@ -595,7 +601,7 @@ namespace dvs_of
                 continue;
             }
 
-            bool derotate = false;
+            bool derotate = true;
 
             if (derotate)
             {

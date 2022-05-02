@@ -66,7 +66,9 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
   double ResolutionX = 240.0;
   double ResolutionY = 180.0;
 
-  std::vector<std::vector<double>> norm_lines(ArraySize, std::vector<double>{0.0, 0.0, 0.0});
+  std::vector<std::vector<double>> VectorArray(ArraySize, std::vector<double>{0.0, 0.0, 0.0});
+
+  std::vector<std::vector<double>> NormalLines(ArraySize, std::vector<double>{0.0, 0.0, 0.0});
   std::vector<std::vector<double>> all_rules(ArraySize, std::vector<double>{0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
 
   std::vector<std::vector<double>> InitialHullLines = {{0.0, 1.0, 0.0}, {1.0, 0.0, 0.0}, {0.0, 1.0, -ResolutionY}, {1.0, 0.0, -ResolutionX}};
@@ -103,16 +105,19 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
     double B = OpticFlow[i].v;
 
     double C = -(A * OpticFlow[i].x + B * OpticFlow[i].y);
-    norm_lines[i][0] = B;
-    norm_lines[i][1] = -A;
-
+  
     double D = -(B * OpticFlow[i].x + -A * OpticFlow[i].y);
 
-    // norm_lines[i][2] = (OpticFlow[i].x * (OpticFlow[i].y + OpticFlow[i].v) - (OpticFlow[i].x + OpticFlow[i].u) * OpticFlow[i].y);
+    // NormalLines[i][2] = (OpticFlow[i].x * (OpticFlow[i].y + OpticFlow[i].v) - (OpticFlow[i].x + OpticFlow[i].u) * OpticFlow[i].y);
     // ROS_INFO("Vector = %lf x + %lf y + %lf = 0",A,B,C);
     // ROS_INFO("Normal = %lf x + %lf y + %lf = 0",B,-A,D);
+    VectorArray[i][0] = B;
+    VectorArray[i][1] = -A;
+    VectorArray[i][2] = D;
+    NormalLines[i][0] = A;
+    NormalLines[i][1] = B;
 
-    norm_lines[i][2] = D;
+    NormalLines[i][2] = C;
 
     //std::cout << "OF vector = " << A << "\t" << B << "\t" << C << std::endl;
     //std::cout << "Normal vector = " << B << "\t" << -A << "\t" << D << std::endl;
@@ -127,19 +132,19 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
   {
     double sign_u = signum(OpticFlow[i].u); // source: google cpp signum
     double sign_v = signum(OpticFlow[i].v); // source: google cpp signum
-    if (norm_lines[i][0] < 0)
+    if (NormalLines[i][0] < 0)
     {
-      all_rules[i] = std::vector<double>{-norm_lines[i][0], -norm_lines[i][1], -norm_lines[i][2], sign_v, sign_u};
+      all_rules[i] = std::vector<double>{-NormalLines[i][0], -NormalLines[i][1], -NormalLines[i][2], sign_v, sign_u};
     }
     else
     {
-      all_rules[i] = std::vector<double>{norm_lines[i][0], norm_lines[i][1], norm_lines[i][2], sign_v, sign_u};
+      all_rules[i] = std::vector<double>{NormalLines[i][0], NormalLines[i][1], NormalLines[i][2], sign_v, sign_u};
     }
   }
 
   // add initial hull to all lines
 
-  // all_lines = norm_lines;
+  // all_lines = NormalLines;
   // for (i = 0; i < InitialHullLines.size(); i++)
   // {
   //   std::vector<double> append_vector = {InitialHullLines[i]};
@@ -153,8 +158,8 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
   { // for n iterations
     // ROS_INFO("iteration %i", n);
     //   initiate hull
-    std::vector<int> VectorInHull(norm_lines.size(), 0);
-    std::vector<int> VectorTried(norm_lines.size(), 0);
+    std::vector<int> VectorInHull(NormalLines.size(), 0);
+    std::vector<int> VectorTried(NormalLines.size(), 0);
 
     HullLines = InitialHullLines;
     HullRules = InitialHullRules;
@@ -197,7 +202,7 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
       // see if all vectors are tried yet
 
       // choose vector
-      std::vector<double> RandomNormal = norm_lines[RandomNormalIndex];
+      std::vector<double> RandomNormal = NormalLines[RandomNormalIndex];
       //std::cout << "Random vector = " << RandomNormal[0] << "\t" << RandomNormal[1] << "\t" << RandomNormal[2] << std::endl;
 
       double sign_u = signum(OpticFlow[RandomNormalIndex].u); // source: google cpp signum
@@ -468,6 +473,18 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
   *FoE_x = std::accumulate(FoE_hist_x.begin(), FoE_hist_x.end(), 0.0) / FoE_hist_x.size();
   *FoE_y = std::accumulate(FoE_hist_y.begin(), FoE_hist_y.end(), 0.0) / FoE_hist_y.size();
 
+/*
+
+  tan30 = 120/XX;
+
+  XX = 120/tan30
+
+  FOEangX = atan(FoE_x / (120/tan30)) = atan(FoE_x *tan30 / 120)
+
+  float XX = std::atan(30) * 120;
+
+  float FoE_angle_X = FoE_x/NumPixels_X
+*/
   if (FoE_hist_x.size() > 10)
   {
     FoE_hist_x.erase(FoE_hist_x.begin());
@@ -494,7 +511,7 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
     //std::cout << current_time << "," << 0 << "," << OpticFlow[i].x << "," << OpticFlow[i].y << "," << OpticFlow[i].u << "," << OpticFlow[i].v << std::endl;
 
     FoE_flow_rec_file << current_time << "," << 0 << "," << OpticFlow[i].x << "," << OpticFlow[i].y << "," << OpticFlow[i].u << "," << OpticFlow[i].v << std::endl;
-    FoE_flow_rec_file << current_time << "," << 1 << "," << OpticFlow[i].x << "," << OpticFlow[i].y << "," << norm_lines[i][0] << "," << norm_lines[i][1] << std::endl;
+    FoE_flow_rec_file << current_time << "," << 1 << "," << OpticFlow[i].x << "," << OpticFlow[i].y << "," << -OpticFlow[i].v << "," << OpticFlow[i].u << std::endl;
   }
 }
 
