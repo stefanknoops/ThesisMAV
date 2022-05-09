@@ -5,11 +5,11 @@ n_timesteps = time*10^9/dt;
 z_start = 3;
 z_end = 1;
 
-FOV_X = 61.7164;
-FOV_Y = 48.2168;
+FOV_X = 61.7164/2;
+FOV_Y = 48.2168/2;
 
 
-filename = 'SlowRoll';
+filename = 'Down20deg';
 
 
 
@@ -30,9 +30,9 @@ traj(:,2:4) = [x,y,z];
 
 
 
-%in rad
+%in degrees
 yaw = zeros(n_timesteps,1);
-roll = sin(traj(:,1)/10^9);
+roll = zeros(n_timesteps,1)+20/180*pi;
 pitch = zeros(n_timesteps,1);
 
 %%%EXAMPLES
@@ -64,7 +64,7 @@ end
 
 traj(:,1) = linspace(0,(time+delay)*10^9,size(traj,1));
 
-%traj = round(traj,3); %round to avoid engineering notation, splines still expected to look the same
+traj = round(traj,3); %round to avoid engineering notation, splines still expected to look the same
 
 
 T = array2table(traj);

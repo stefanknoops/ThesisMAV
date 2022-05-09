@@ -1,4 +1,4 @@
-ExperimentName = 'SlowRollCarpet';
+ExperimentName = 'SlowRoll';
 
 filepath1 = append('../Experiments/',ExperimentName,'.csv');
 traj = csvread(filepath1,1);

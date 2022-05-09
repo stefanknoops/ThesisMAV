@@ -1,4 +1,4 @@
-M = csvread("OF_LOGFILE_2022_04_25-15_40_05.txt");
+M = csvread("../Experiments/SlowRollCarpet/OF_LOGFILE_.txt");
 
 time = M(:,1);
 x= M(:,2);
@@ -27,7 +27,7 @@ for i=1:100:size(time,1)
   
     quiver(x(i:i+99),y(i:i+99),u(i:i+99),v(i:i+99),1,"Color","Black");
     quiver(x(i:i+99),y(i:i+99),rot_u(i:i+99),rot_v(i:i+99),1,"Color","Red")
-    quiver(x(i:i+99),y(i:i+99),du(i:i+99),dv(i:i+99),1,"Color","Blue");
+    quiver(x(i:i+99),y(i:i+99),du(i:i+99),dv(i:i+99),10,"Color","Blue");
  
     axis equal
        xlim([0,240])
