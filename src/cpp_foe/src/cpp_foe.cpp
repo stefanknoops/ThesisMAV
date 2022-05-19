@@ -105,7 +105,7 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
     double B = OpticFlow[i].v;
 
     double C = -(A * OpticFlow[i].x + B * OpticFlow[i].y);
-  
+
     double D = -(B * OpticFlow[i].x + -A * OpticFlow[i].y);
 
     // NormalLines[i][2] = (OpticFlow[i].x * (OpticFlow[i].y + OpticFlow[i].v) - (OpticFlow[i].x + OpticFlow[i].u) * OpticFlow[i].y);
@@ -119,10 +119,8 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
 
     NormalLines[i][2] = C;
 
-    //std::cout << "OF vector = " << A << "\t" << B << "\t" << C << std::endl;
-    //std::cout << "Normal vector = " << B << "\t" << -A << "\t" << D << std::endl;
-
-
+    // std::cout << "OF vector = " << A << "\t" << B << "\t" << C << std::endl;
+    // std::cout << "Normal vector = " << B << "\t" << -A << "\t" << D << std::endl;
   }
   //  Create a list with the rules for all vectors
   //  Rule: [A, B, C, sign(v), sign(u)] // not sure what rules are
@@ -203,7 +201,7 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
 
       // choose vector
       std::vector<double> RandomNormal = NormalLines[RandomNormalIndex];
-      //std::cout << "Random vector = " << RandomNormal[0] << "\t" << RandomNormal[1] << "\t" << RandomNormal[2] << std::endl;
+      // std::cout << "Random vector = " << RandomNormal[0] << "\t" << RandomNormal[1] << "\t" << RandomNormal[2] << std::endl;
 
       double sign_u = signum(OpticFlow[RandomNormalIndex].u); // source: google cpp signum
       double sign_v = signum(OpticFlow[RandomNormalIndex].v); // source: google cpp signum
@@ -212,7 +210,7 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
       if (RandomNormal[0] < 0.0)
       {
 
-        RandomNormalRule = {-RandomNormal[0], -RandomNormal[1],-RandomNormal[2], sign_v, sign_u, (double)RandomNormalIndex};
+        RandomNormalRule = {-RandomNormal[0], -RandomNormal[1], -RandomNormal[2], sign_v, sign_u, (double)RandomNormalIndex};
       }
       else
       {
@@ -292,10 +290,10 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
           // if not violated, add to hull
           if (!Illegal && !AddCheck)
           {
-            //std::cout << "RV: " << RandomNormal[0] << ", " << RandomNormal[1] << ", " << RandomNormal[2] << std::endl;
+            // std::cout << "RV: " << RandomNormal[0] << ", " << RandomNormal[1] << ", " << RandomNormal[2] << std::endl;
             HullLines.push_back(RandomNormal);
-            int EndOfVector = HullLines.size()-1;
-            //std::cout << "HL" << HullLines[EndOfVector][0] << ",\t " << HullLines[EndOfVector][1] << ",\t " << HullLines[EndOfVector][2] << std::endl;
+            int EndOfVector = HullLines.size() - 1;
+            // std::cout << "HL" << HullLines[EndOfVector][0] << ",\t " << HullLines[EndOfVector][1] << ",\t " << HullLines[EndOfVector][2] << std::endl;
             HullRules.push_back(RandomNormalRule);
             VectorInHull[RandomNormalIndex] = 1;
             AddCheck = true;
@@ -473,30 +471,32 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
   *FoE_x = std::accumulate(FoE_hist_x.begin(), FoE_hist_x.end(), 0.0) / FoE_hist_x.size();
   *FoE_y = std::accumulate(FoE_hist_y.begin(), FoE_hist_y.end(), 0.0) / FoE_hist_y.size();
 
-/*
+  /*
 
-  tan30 = 120/XX;
+    tan30 = 120/XX;
 
-  XX = 120/tan30
+    XX = 120/tan30
 
-  FOEangX = atan(FoE_x / (120/tan30)) = atan(FoE_x *tan30 / 120)
+    FOEangX = atan(FoE_x / (120/tan30)) = atan(FoE_x *tan30 / 120)
 
-  float XX = std::atan(30) * 120;
+    float XX = std::atan(30) * 120;
 
-  float FoE_angle_X = FoE_x/NumPixels_X
-*/
-  if (FoE_hist_x.size() > 10)
+    float FoE_angle_X = FoE_x/NumPixels_X
+  */
+
+  int num_average = 3;
+  if (FoE_hist_x.size() > num_average)
   {
     FoE_hist_x.erase(FoE_hist_x.begin());
     FoE_hist_y.erase(FoE_hist_y.begin());
   }
 
-  int64_t current_time = ros::Time::now().toNSec();
+  int64_t current_time = OpticFlow[0].t;
 
-  FoE_rec_file << current_time << "," << FOEX / (double)BestHull.size() << "," << FOEY / (double)BestHull.size() << std::endl;
+  FoE_rec_file << current_time << ", " << *FoE_x << ", " << *FoE_y << ", " << num_average << ", " << ArraySize << std::endl;
 
   for (int i = 0; i < BestHullLines.size(); i++)
-  {//std::cout << "besthull" << current_time << "," << BestHullLines[i][0] << "," << BestHullLines[i][1] << "," << BestHullLines[i][2] << std::endl;
+  { // std::cout << "besthull" << current_time << "," << BestHullLines[i][0] << "," << BestHullLines[i][1] << "," << BestHullLines[i][2] << std::endl;
 
     HL_log_file << current_time << "," << BestHullLines[i][0] << "," << BestHullLines[i][1] << "," << BestHullLines[i][2] << std::endl;
   }
@@ -508,10 +508,8 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
 
   for (int i = 0; i < ArraySize; i++)
   {
-    //std::cout << current_time << "," << 0 << "," << OpticFlow[i].x << "," << OpticFlow[i].y << "," << OpticFlow[i].u << "," << OpticFlow[i].v << std::endl;
-
-    FoE_flow_rec_file << current_time << "," << 0 << "," << OpticFlow[i].x << "," << OpticFlow[i].y << "," << OpticFlow[i].u << "," << OpticFlow[i].v << std::endl;
-    FoE_flow_rec_file << current_time << "," << 1 << "," << OpticFlow[i].x << "," << OpticFlow[i].y << "," << -OpticFlow[i].v << "," << OpticFlow[i].u << std::endl;
+    // std::cout << current_time << "," << 0 << "," << OpticFlow[i].x << "," << OpticFlow[i].y << "," << OpticFlow[i].u << "," << OpticFlow[i].v << std::endl
+    FoE_flow_rec_file << current_time << "," << OpticFlow[i].x << "," << OpticFlow[i].y << "," << OpticFlow[i].u << "," << OpticFlow[i].v << "," << OpticFlow[i].ru << "," << OpticFlow[i].rv << std::endl;
   }
 }
 
@@ -519,20 +517,22 @@ void estimationServer()
 {
   // Fill final OF buffer to be used by FOE estimation
   log_OF(&myOF);
+
   std::vector<FlowPacket> optic_flow;
   int buffersize = final_buffer.size();
   // ROS_INFO("estimationserver buffersize: %i", buffersize);
-  if (final_buffer.size() > 1) // min amount of vectors required
-  {
 
-    optic_flow = fillOpticFlowArray();
+  int min_vectors = 10;
+  if (final_buffer.size() > min_vectors) // min amount of vectors required
+  {
 
     // double beforetime = ros::Time::now().toSec();
 
     // Run FOE estimation
-    estimateFoECPP(optic_flow, &FoE_x, &FoE_y);
+    estimateFoECPP(final_buffer, &FoE_x, &FoE_y);
     // Add 0.5 to FoE_x for truncating by compiler to integer
     // double calctime = ros::Time::now().toSec() - beforetime;
+    final_buffer.clear();
 
     // ROS_INFO("estimateFoECPP time: %f", calctime);
 
@@ -555,6 +555,8 @@ void opticflowCallback(const dvs_of_msg::FlowPacketMsgArray::ConstPtr &msg) // g
     OFvec.y = (int16_t)(msg->flowpacketmsgs[i].y);
     OFvec.u = (float)(msg->flowpacketmsgs[i].u);
     OFvec.v = (float)(msg->flowpacketmsgs[i].v);
+    OFvec.ru = (float)(msg->flowpacketmsgs[i].ru);
+    OFvec.rv = (float)(msg->flowpacketmsgs[i].rv);
     myOF.push_back(OFvec);
     //}
   }
@@ -589,19 +591,19 @@ void log_OF(std::vector<FlowPacket> *myOF)
   prepMutex.lock();
   for (std::vector<FlowPacket>::iterator it = myOF->begin(); it != myOF->end(); it++)
   {
-    uint64_t diff = last_ts + period_;
-    uint64_t currenttime = (*it).t;
+    double diff = last_ts - period_;
+    double currenttime = (*it).t;
 
     if (currenttime >= diff)
     {
 
       last_ts = (*it).t;
-      OFvec_buf.x = (*it).x;
-      OFvec_buf.y = (*it).y;
-      OFvec_buf.u = (*it).u;
-      OFvec_buf.v = (*it).v;
-      OFvec_buf.t = (*it).t;
-      final_buffer.push_back(OFvec_buf);
+      // OFvec_buf.x = (*it).x;
+      // OFvec_buf.y = (*it).y;
+      // OFvec_buf.u = (*it).u;
+      // OFvec_buf.v = (*it).v;
+      // OFvec_buf.t = (*it).t;
+      final_buffer.push_back((*it));
     }
   }
   prepMutex.unlock();
@@ -620,18 +622,18 @@ int main(int argc, char **argv)
 
   std::string myDate = currentDateTime();
 
-  std::string filename = "FoE_recording_" + myDate + ".txt";
+  std::string filename = "FoE_recording.txt";
   FoE_rec_file.open(filename);
 
-  std::string filename_flow = "FoE_flow_recording_" + myDate + ".txt";
+  std::string filename_flow = "FoE_flow_recording.txt";
 
   FoE_flow_rec_file.open(filename_flow);
 
-  std::string filename_HP = "HP_recording" + myDate + ".txt";
+  std::string filename_HP = "HP_recording.txt";
 
   HP_log_file.open(filename_HP);
 
-  std::string filename_HL = "HL_recording" + myDate + ".txt";
+  std::string filename_HL = "HL_recording.txt";
 
   HL_log_file.open(filename_HL);
 

@@ -5,5 +5,5 @@ uint64 t
 bool p
 float32 u
 float32 v
-uint16 ux
-uint16 uy
+float32 ru
+float32 rv

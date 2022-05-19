@@ -1,16 +1,18 @@
-ExperimentName = 'SlowRollCarpet';
-close all
-filepath1 = append('../Experiments/',ExperimentName,'.csv');
-traj = csvread(filepath1,1);
-
+ExperimentName = 'Rolling-3030Downward';
+filepath1 = append('../Experiments/',ExperimentName,'/trajectory.csv');
 filepath2 = append('../Experiments/',ExperimentName,'/FoE_recording.txt');
+filepath3 = append('../Experiments/',ExperimentName,'/Expected_FoE.csv');
+
+
+traj = csvread(filepath1,1);
+traj(:,1) = (traj(:,1)-traj(1,1))/10^9;
+
 EstimatedFoE = csvread(filepath2,1);
 EstimatedFoE(:,1) = (EstimatedFoE(:,1)-EstimatedFoE(1,1))/10^6;
 
-filepath3 = append('../Experiments/',ExperimentName,'_FoE.csv');
 TrueFoE = csvread(filepath3,1);
 
-filepath4 = append('../Experiments/Simulated',ExperimentName,'.bag.csv');
+filepath4 = append('../Experiments/',ExperimentName,'/SimulatedPose.csv');
 SimulatedTraj = csvread(filepath4,1);
 
 sim_x = SimulatedTraj(:,3);
@@ -30,8 +32,8 @@ sim_pitch = angles(:,3);
 FOV_X = 61.7164*pi/180;
 FOV_Y = 48.2168*pi/180;
 
-EstimatedFoE(:,2) = atan((120-EstimatedFoE(:,2)) * tan(FOV_X)/120)*180/pi;
-EstimatedFoE(:,3) = -atan((90-EstimatedFoE(:,3)) * tan(FOV_Y)/90)*180/pi;
+EstimatedFoE(:,2) =     atan(      (120-   EstimatedFoE(:,2)) * tan(FOV_X/2)/120   )   *180/pi;
+EstimatedFoE(:,3) = -   atan(      (90-    EstimatedFoE(:,3)) * tan(FOV_Y/2)/90    )   *180/pi;
 
 %EstimatedFoE(:,2) = EstimatedFoE(:,2) - 120;
 %EstimatedFoE(:,3) = -EstimatedFoE(:,3) + 90;
@@ -72,11 +74,19 @@ legend('Estimated FoE_y','True FoE_y','Lower bound','Upper bound')
 figure(2)
 subplot(2,1,1)
 plot(SimulatedTraj(:,2),[sim_x,sim_y,sim_z])
-legend('sim_x','sim_y','sim_z')
+hold on
+plot(traj(:,1),[traj(:,2),traj(:,3),traj(:,4)],'--')
+legend('sim_x','sim_y','sim_z','planned_x','planned_y','planned_z')
+hold off
 
 subplot(2,1,2)
 plot(SimulatedTraj(:,2),[sim_roll,sim_pitch,sim_yaw])
-legend('sim_roll','sim_pitch','sim_yaw')
+hold on
+plot(traj(:,1),quat2eul([traj(:,5),traj(:,6),traj(:,7),traj(:,8)]),'--')
+
+legend('sim_roll','sim_pitch','sim_yaw','planned_roll','planned_pitch','planned_yaw')
+
+hold off 
 
 figure(3)
 subplot(2,2,1)
@@ -91,8 +101,8 @@ histogram(err_x,30);
 subplot(2,2,4);
 histogram(err_y,30);
 
-disp("Average error x: "+string(mean(err_x)))
-disp("Average error y: "+string(mean(err_y)))
+disp("Mean absolute error x: "+string(mean(abs(err_x))))
+disp("Mean absolute error y: "+string(mean(abs(err_y))))
 disp("Median amount of flow vectors: "+string(median(EstimatedFoE(:,5))))
 
 

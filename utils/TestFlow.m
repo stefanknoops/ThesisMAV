@@ -1,15 +1,17 @@
-ExperimentName = 'SlowRollCarpet';
+ExperimentName = 'Rolling-3030Downward';
 
-filepath1 = append('../Experiments/',ExperimentName,'.csv');
-traj = csvread(filepath1,1);
 
+filepath1 = append('../Experiments/',ExperimentName,'/trajectory.csv');
 filepath2 = append('../Experiments/',ExperimentName,'/FoE_recording.txt');
-
 filepath3 = append('../Experiments/',ExperimentName,'/FoE_flow_recording.txt');
 
 filepath4 = append('../Experiments/',ExperimentName,'/HL_recording.txt');
-
 filepath5 = append('../Experiments/',ExperimentName,'/HP_recording.txt');
+
+traj = csvread(filepath1,1);
+
+
+
 
 FoE = csvread(filepath2,1);
 
@@ -39,9 +41,12 @@ for i = 1:size(FoE,1)
     %disp(flowindex)
     Indeces = (Flow(:,1) == FoE(i,1));
     CorrespondingFlow = Flow(Indeces,:);
-    quiver(CorrespondingFlow(:,2),CorrespondingFlow(:,3),CorrespondingFlow(:,4),CorrespondingFlow(:,5),1,'Color','Red')
+    quiver(CorrespondingFlow(:,2),CorrespondingFlow(:,3),CorrespondingFlow(:,6),CorrespondingFlow(:,7),'Color','Blue')
 
+    quiver(CorrespondingFlow(:,2),CorrespondingFlow(:,3),CorrespondingFlow(:,4),CorrespondingFlow(:,5),'Color','Red')
     
+
+    disp([CorrespondingFlow(:,4),CorrespondingFlow(:,5),CorrespondingFlow(:,6),CorrespondingFlow(:,7)])
     
     Indeces = (HP(:,1) == FoE(i,1));
    CorrespondingHP = HP(Indeces,:);
@@ -65,8 +70,9 @@ for i = 1:size(FoE,1)
     set(gca, 'YDir','reverse')
     xlim([0,240])
     ylim([0,180])
-    disp('new, i = '+string(i)+', size = '+string(size(CorrespondingFlow,1)))
-    
+    disp('new, i = '+string(i)+', size = '+string(size(CorrespondingFlow,1))+', time = '+string((FoE(i,1)-FoE(1,1))/10^6))
+        legend('Unprocessed','Derotated');
+
     pause();
     
 end

@@ -76,6 +76,8 @@ struct FlowPacket {
 
     double u;
     double v;
+    double ru;
+    double rv;
 
 };
 

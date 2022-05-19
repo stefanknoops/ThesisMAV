@@ -1,15 +1,15 @@
 frequency = 500;
 dt = 10^9/frequency; %in ns
-time = 10;
+time = 7;
 n_timesteps = time*10^9/dt;
-z_start = 3;
+z_start = 5;
 z_end = 1;
 
-FOV_X = 61.7164;
-FOV_Y = 48.2168;
+FOV_X = 61.7164/2;
+FOV_Y = 48.2168/2;
 
 
-filename = 'SlowRoll';
+filename = 'ConstantYaw';
 
 
 
@@ -22,17 +22,17 @@ t_sim = t/10^9;
 traj(:,1) = t;
 
 b = 0.01;
-x = zeros(n_timesteps,1);
+x =  zeros(n_timesteps,1);
 y = zeros(n_timesteps,1);
-z = linspace(z_start,z_end,n_timesteps).';
+z = zeros(n_timesteps,1);
 
 traj(:,2:4) = [x,y,z];
 
 
 
 %in rad
-yaw = zeros(n_timesteps,1);
-roll = sin(traj(:,1)/10^9);
+yaw = linspace(-30,30,n_timesteps).';
+roll = zeros(n_timesteps,1);
 pitch = zeros(n_timesteps,1);
 
 %%%EXAMPLES
@@ -66,13 +66,13 @@ traj(:,1) = linspace(0,(time+delay)*10^9,size(traj,1));
 
 %traj = round(traj,3); %round to avoid engineering notation, splines still expected to look the same
 
-
+mkdir('../Experiments/'+string(filename));
 T = array2table(traj);
 
 varnames = {"# timestamp"," x"," y"," z"," qx"," qy"," qz"," qw"};
 T.Properties.VariableNames(1:8) = ["# timestamp"," x"," y"," z"," qx"," qy"," qz"," qw"];
 %dlmwrite(filename,traj,'precision','%.5f');
-filepath = append('../Experiments/',filename,'.csv');
+filepath = append('../Experiments/',filename,'/trajectory.csv');
 
 fname=filepath;
 writetable(cell2table(varnames),fname,'writevariablenames',0)
@@ -87,7 +87,7 @@ clear T
 T = array2table([t_sim(2:end).', SimulatedFoE_X.', SimulatedFoE_Y.']);
 T.Properties.VariableNames(1:3) = ["t"," FoE_x"," FoE_y"];
 
-filepath = append('../Experiments/',filename,'_FoE.csv');
+filepath = append('../Experiments/',filename,'/Expected_FoE.csv');
 writetable(T,filepath);
 
 
@@ -110,7 +110,7 @@ set(gca,'FontName','Arial','FontSize',12);
 
 set(gcf,'Position',[100 100 700 800])
 
-filepath = append('../Experiments/',filename,'_plot_traj.png');
+filepath = append('../Experiments/',filename,'/TrajectoryPlot.png');
 saveas(gcf,filepath)
 
 figure(2);
@@ -132,7 +132,7 @@ set(gca,'FontName','Arial','FontSize',12);
 
 set(gcf,'Position',[800 100 700 800])
 
-filepath = append('../Experiments/',filename,'_plot_FoE.png');
+filepath = append('../Experiments/',filename,'/PlotFoE.png');
 saveas(gcf,filepath)
 hold off
 

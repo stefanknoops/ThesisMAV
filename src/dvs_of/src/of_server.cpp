@@ -377,7 +377,7 @@ namespace dvs_of
     /**
      * Store optic flow results
      */
-    void OpticFlow::storeEventsFlow(float d_u, float d_v, float mag, rates_t rates, float rot_u, float rot_v, float chck)
+    void OpticFlow::storeEventsFlow(double d_u, double d_v, double mag, rates_t rates, double rot_u, double rot_v, double chck)
     {
         std::ofstream EventsFlow;
         EventsFlow.open(this->FileName, std::ofstream::app);
@@ -472,12 +472,12 @@ namespace dvs_of
 
         std::mutex derot_mutex;
 
-        //float rotational_u = 0.f, rotational_v = 0.f;
+        // float rotational_u = 0.f, rotational_v = 0.f;
 
-        float x_nor, y_nor;
+        double x_nor, y_nor;
 
-        float derotate_u = 0.f, derotate_v = 0.f;
-        float derotate_mag = 0.0f;
+        double derotate_u = 0.f, derotate_v = 0.f;
+        double derotate_mag = 0.0f;
 
         // Find rate in center of fitted plane
 
@@ -486,15 +486,14 @@ namespace dvs_of
         // Derotate the flow
         // Normalize the x,y coordinates
         x_nor = (FlowPacket.x / 120.f) - 1.f;
-        y_nor = (FlowPacket.y / 90.f) - 1.f;
-
+        y_nor = ((FlowPacket.y / 90.f) - 1.f)*(180/240);
 
         rotational_u = -(-rates.r * (x_nor * x_nor + 1.f) + y_nor * (rates.p + rates.q * x_nor));
-        rotational_v = -(rates.q * (1.f + y_nor * y_nor) - x_nor * (rates.p + rates.r * y_nor));
+        rotational_v =  -(rates.q * (1.f + y_nor * y_nor) - x_nor * (rates.p + rates.r * y_nor));
 
-        //std::cout << "rot_u = " << rotational_u << ", \t" << "rot_v = "<< rotational_v << std::endl;
+        // std::cout << "rot_u = " << rotational_u << ", \t" << "rot_v = "<< rotational_v << std::endl;
 
-        float mag_OF = 0.f, mag_OF_rot = 0.f, ang_OF = 0.f, ang_OF_rot = 0.f, OF_proj = 0.f, OF_der_pre = 0.f, OF_der = 0.f, u_der = 0.f, v_der = 0.f, pos_ang_OF_rot = 0.f, pos_ang_OF = 0.f;
+        double mag_OF = 0.f, mag_OF_rot = 0.f, ang_OF = 0.f, ang_OF_rot = 0.f, OF_proj = 0.f, OF_der_pre = 0.f, OF_der = 0.f, u_der = 0.f, v_der = 0.f, pos_ang_OF_rot = 0.f, pos_ang_OF = 0.f;
 
         // Angle of optic flow
         ang_OF = atan2(FlowPacket.v, FlowPacket.u);
@@ -531,7 +530,7 @@ namespace dvs_of
         OF_proj = mag_OF_rot * cos(abs(pos_ang_OF_rot - pos_ang_OF));
         OF_der_pre = mag_OF - OF_proj;
 
-        // Map to only positive angles
+        // Map only when rotational part does not exceed total flow
         if (OF_der_pre > 0)
         {
             OF_der = OF_der_pre;
@@ -545,8 +544,7 @@ namespace dvs_of
         this->u_der = OF_der * cos(pos_ang_OF);
         this->v_der = OF_der * sin(pos_ang_OF);
 
-        //std::cout << "rot_u = " << rotational_u << ", \t" << "of u = "<< FlowPacket.u << std::endl;
-
+        // std::cout << "rot_u = " << rotational_u << ", \t" << "of u = "<< FlowPacket.u << std::endl;
 
         derotate_mag = rotational_u * rotational_u + rotational_v * rotational_v;
 
@@ -624,8 +622,8 @@ namespace dvs_of
             OFmsg_.p = this->myFlowPacket.p;
             OFmsg_.u = u_der;
             OFmsg_.v = v_der;
-            OFmsg_.ux = this->myFlowPacket.ux;
-            OFmsg_.uy = this->myFlowPacket.uy;
+            OFmsg_.ru = this->myFlowPacket.u;
+            OFmsg_.rv = this->myFlowPacket.v;
 
             PacketPub_.flowpacketmsgs.push_back(OFmsg_);
             PacketPub_.height = 180;
@@ -655,8 +653,8 @@ namespace dvs_of
     Server::Server(ros::NodeHandle &nh, ros::NodeHandle nh_private) : nh_(nh)
     {
         // Setup subscribers and publishers
-        event_sub_ = nh_.subscribe("dvs/events", 1, &Server::eventsCallback, this);
-        imu_sub_ = nh_.subscribe("dvs/imu", 1, &Server::imuCallback, this);
+        event_sub_ = nh_.subscribe("cam0/events", 1, &Server::eventsCallback, this);
+        imu_sub_ = nh_.subscribe("imu", 1, &Server::imuCallback, this);
         foe_sub = nh_.subscribe("/FoEx", 1, &Server::foeCallback, this);
 
         OF_pub_ = nh_.advertise<dvs_of_msg::FlowPacketMsgArray>("/OpticFlow", 1);
@@ -668,9 +666,9 @@ namespace dvs_of
         std::string ID1("DVS_recording_");
         std::string ID2("IMU_recording_");
         std::string ID3("OF_LOGFILE_");
-        std::string filename1 = ID1 + myDate + ".txt";
-        std::string filename2 = ID2 + myDate + ".txt";
-        std::string filename3 = ID3 + myDate + ".txt";
+        std::string filename1 = ID1 + ".txt";
+        std::string filename2 = ID2 + ".txt";
+        std::string filename3 = ID3 + ".txt";
         DVS_rec_file.open(filename1);
         IMU_rec_file.open(filename2);
 
@@ -705,7 +703,7 @@ namespace dvs_of
                 imu_.acc_y = (double)(msg->linear_acceleration.y);
                 imu_.acc_z = (double)(msg->linear_acceleration.z);
 
-                imu_.gyr_x = (float)(msg->angular_velocity.x);
+                imu_.gyr_x = -(float)(msg->angular_velocity.x);
                 imu_.gyr_y = (float)(msg->angular_velocity.y);
                 imu_.gyr_z = (float)(msg->angular_velocity.z);
 

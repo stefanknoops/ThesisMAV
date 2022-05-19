@@ -65,7 +65,7 @@ namespace dvs_of
     private:
         int32_t length_;
         float period_;       // us
-        uint8_t num_ele = 0; // = 5
+        uint8_t num_ele = 5; // = 5
         MedianFilter p_filt = MedianFilter(num_ele);
         MedianFilter q_filt = MedianFilter(num_ele);
         MedianFilter r_filt = MedianFilter(num_ele);
@@ -135,21 +135,21 @@ namespace dvs_of
         ~OpticFlow();
         void initFlowState();
         void determinePixelNeighborhood();
-        void storeEventsFlow(float d_u, float d_v, float mag, rates_t rates, float rot_u, float rot_v, float chck);
+        void storeEventsFlow(double d_u, double d_v, double mag, rates_t rates, double rot_u, double rot_v, double chck);
         void computeOpticFlowVectors(std::vector<Events> *myEventsFOV, std::vector<IMU> *myIMU);
         void setLogFileName(std::string filename);
         void checkVectorDirection(FlowPacket flow);
         void derotateFlow(dvs_of::FlowPacket FlowPacket);
         bool derotate_flag = false;
-        float u_der;
-        float v_der;
-        float rotational_u = 0.f, rotational_v = 0.f;
+        double u_der;
+        double v_der;
+        double rotational_u = 0.f, rotational_v = 0.f;
 
-        float x_nor, y_nor;
+        double x_nor, y_nor;
 
-        float derotate_u = 0.f, derotate_v = 0.f;
-        float derotate_mag = 0.0f;
-        float ang_OF;
+        double derotate_u = 0.f, derotate_v = 0.f;
+        double derotate_mag = 0.0f;
+        double ang_OF;
         rates_t rates;
 
       
