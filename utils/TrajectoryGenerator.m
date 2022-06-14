@@ -5,11 +5,11 @@ n_timesteps = time*10^9/dt;
 z_start = 5;
 z_end = 1;
 
-FOV_X = 61.7164/2;
-FOV_Y = 48.2168/2;
+FOV_X = 61.7164;
+FOV_Y = 48.2168;
 
 
-filename = 'ConstantYaw';
+filename = 'Rolling-3030Downward';
 
 
 
@@ -22,17 +22,17 @@ t_sim = t/10^9;
 traj(:,1) = t;
 
 b = 0.01;
-x =  zeros(n_timesteps,1);
+x = zeros(n_timesteps,1);
 y = zeros(n_timesteps,1);
-z = zeros(n_timesteps,1);
+z = linspace(z_start,z_end,n_timesteps).';
 
 traj(:,2:4) = [x,y,z];
 
 
 
 %in rad
-yaw = linspace(-30,30,n_timesteps).';
-roll = zeros(n_timesteps,1);
+yaw = zeros(n_timesteps,1);
+roll = pi/180.*linspace(-30,30,n_timesteps).';
 pitch = zeros(n_timesteps,1);
 
 %%%EXAMPLES
@@ -97,17 +97,23 @@ subplot(3,1,1);
 plot(t,[x,y,z]);
 legend('x','y','z');
 set(gca,'FontName','Arial','FontSize',12);
+ylabel('position [m]') 
+xlabel('time [ns]') 
+
 
 subplot(3,1,3);
 plot(t,[pitch,roll,yaw]);
 legend('pitch','roll','yaw')
 set(gca,'FontName','Arial','FontSize',12);
+xlabel('time [ns]') 
+ylabel('rotation in body frame [rad/s]') 
 
 subplot(3,1,2);
 plot(t(2:end),[vx.',vy.',vz.']);
 legend('vx','vy','vz')
 set(gca,'FontName','Arial','FontSize',12);
-
+ylabel('velocity in body frame [m/s]') 
+xlabel('time [ns]') 
 set(gcf,'Position',[100 100 700 800])
 
 filepath = append('../Experiments/',filename,'/TrajectoryPlot.png');
@@ -117,7 +123,7 @@ figure(2);
 subplot(2,1,1)
 plot(t(2:end),SimulatedFoE_X)
 title('Simulated FoE_x')
-yline([-FOV_X,FOV_X],'--')
+yline([-FOV_X/2,FOV_X/2],'--')
 yline([0],':')
 set(gca,'FontName','Arial','FontSize',12);
 
@@ -125,7 +131,7 @@ set(gca,'FontName','Arial','FontSize',12);
 subplot(2,1,2)
 plot(t(2:end),SimulatedFoE_Y)
 title('Simulated FoE_y')
-yline([-FOV_Y,FOV_Y],'--')
+yline([-FOV_Y/2,FOV_Y/2],'--')
 yline([0],':')
 set(gca,'FontName','Arial','FontSize',12);
 

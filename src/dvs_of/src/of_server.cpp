@@ -228,9 +228,9 @@ namespace dvs_of
         uint64_t tf;
         for (; it != myIMU->end(); it++)
         {                                     // DEPENDS ON COORDINATE SYSTEM, IN THIS CASE:
-            this->p_filt.update((*it).gyr_z); // z Roll
-            this->q_filt.update((*it).gyr_x); // x Pitch
-            this->r_filt.update((*it).gyr_y); // y Yaw
+            this->p_filt.update((*it).gyr_x); // pitch
+            this->q_filt.update((*it).gyr_y); // roll
+            this->r_filt.update((*it).gyr_z); // yaw
             if ((*it).t >= last_ts + this->period_ && initialized)
             {
                 this->rates_mutex.lock();
@@ -486,10 +486,10 @@ namespace dvs_of
         // Derotate the flow
         // Normalize the x,y coordinates
         x_nor = (FlowPacket.x / 120.f) - 1.f;
-        y_nor = ((FlowPacket.y / 90.f) - 1.f)*(180/240);
+        y_nor = ((FlowPacket.y / 90.f) - 1.f)*0.75 ; //scale as the image is not square
 
-        rotational_u = -(-rates.r * (x_nor * x_nor + 1.f) + y_nor * (rates.p + rates.q * x_nor));
-        rotational_v =  -(rates.q * (1.f + y_nor * y_nor) - x_nor * (rates.p + rates.r * y_nor));
+        rotational_u = -(-rates.q * (x_nor * x_nor + 1.f) + y_nor * (rates.r + rates.p * x_nor));
+        rotational_v =  -(rates.p * (1.f + y_nor * y_nor) - x_nor * (rates.r + rates.q * y_nor));
 
         // std::cout << "rot_u = " << rotational_u << ", \t" << "rot_v = "<< rotational_v << std::endl;
 
@@ -653,8 +653,8 @@ namespace dvs_of
     Server::Server(ros::NodeHandle &nh, ros::NodeHandle nh_private) : nh_(nh)
     {
         // Setup subscribers and publishers
-        event_sub_ = nh_.subscribe("cam0/events", 1, &Server::eventsCallback, this);
-        imu_sub_ = nh_.subscribe("imu", 1, &Server::imuCallback, this);
+        event_sub_ = nh_.subscribe("/dvs/events", 1, &Server::eventsCallback, this);
+        imu_sub_ = nh_.subscribe("/dvs/imu", 1, &Server::imuCallback, this);
         foe_sub = nh_.subscribe("/FoEx", 1, &Server::foeCallback, this);
 
         OF_pub_ = nh_.advertise<dvs_of_msg::FlowPacketMsgArray>("/OpticFlow", 1);

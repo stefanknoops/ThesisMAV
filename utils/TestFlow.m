@@ -1,4 +1,4 @@
-ExperimentName = 'Rolling-3030Downward';
+ExperimentName = 'StraightDown';
 
 
 filepath1 = append('../Experiments/',ExperimentName,'/trajectory.csv');
@@ -34,16 +34,17 @@ for i = 1:size(FoE,1)
     clf;
     xlim([0,240])
     ylim([0,180])
-    axis equal
+    %axis equal
     viscircles([FoE(i,2),FoE(i,3)],5);
     %disp([FoE(i,2),FoE(i,3)])
     hold on
     %disp(flowindex)
     Indeces = (Flow(:,1) == FoE(i,1));
     CorrespondingFlow = Flow(Indeces,:);
-    quiver(CorrespondingFlow(:,2),CorrespondingFlow(:,3),CorrespondingFlow(:,6),CorrespondingFlow(:,7),'Color','Blue')
 
     quiver(CorrespondingFlow(:,2),CorrespondingFlow(:,3),CorrespondingFlow(:,4),CorrespondingFlow(:,5),'Color','Red')
+    quiver(CorrespondingFlow(:,2),CorrespondingFlow(:,3),CorrespondingFlow(:,6),CorrespondingFlow(:,7),'Color','Blue')
+
     
 
     disp([CorrespondingFlow(:,4),CorrespondingFlow(:,5),CorrespondingFlow(:,6),CorrespondingFlow(:,7)])
@@ -71,7 +72,7 @@ for i = 1:size(FoE,1)
     xlim([0,240])
     ylim([0,180])
     disp('new, i = '+string(i)+', size = '+string(size(CorrespondingFlow,1))+', time = '+string((FoE(i,1)-FoE(1,1))/10^6))
-        legend('Unprocessed','Derotated');
+        legend('Derotated','Not derotated');
 
     pause();
     

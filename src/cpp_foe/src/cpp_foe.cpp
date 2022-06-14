@@ -60,6 +60,7 @@ static std::vector<FlowPacket> fillOpticFlowArray()
 void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
                     double *FoE_y)
 {
+  ROS_INFO("check");
   int ArraySize = OpticFlow.size();
   // ROS_INFO("arraysize %i", ArraySize);
 
@@ -84,7 +85,7 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
   int MinScore = 10000;
   bool Illegal;
 
-  int AmountOfIterations = 100;
+  int AmountOfIterations = 40;
 
   std::random_device RandomSeed;
   std::mt19937 RandomNumber(RandomSeed());
@@ -517,16 +518,21 @@ void estimationServer()
 {
   // Fill final OF buffer to be used by FOE estimation
   log_OF(&myOF);
+  //std::cout << "2" << std::endl;
 
   std::vector<FlowPacket> optic_flow;
   int buffersize = final_buffer.size();
   // ROS_INFO("estimationserver buffersize: %i", buffersize);
+  //std::cout << "size: " << final_buffer.size() << std::endl;
+  int min_vectors = 0;
+  ROS_INFO("buffersize %i",buffersize);
 
-  int min_vectors = 10;
   if (final_buffer.size() > min_vectors) // min amount of vectors required
   {
+    ROS_INFO("check5");
 
     // double beforetime = ros::Time::now().toSec();
+    //std::cout << "3" << std::endl;
 
     // Run FOE estimation
     estimateFoECPP(final_buffer, &FoE_x, &FoE_y);
@@ -544,9 +550,12 @@ void estimationServer()
 
 void opticflowCallback(const dvs_of_msg::FlowPacketMsgArray::ConstPtr &msg) // gets the optic flow from the
 {
+  ROS_INFO("check2");
 
   for (int i = 0; i < msg->flowpacketmsgs.size(); i = i + 1)
   {
+    ROS_INFO("check3");
+
     FlowPacket OFvec;
     OFvec.t = (uint64_t)(msg->flowpacketmsgs[i].t);
 
@@ -564,12 +573,14 @@ void opticflowCallback(const dvs_of_msg::FlowPacketMsgArray::ConstPtr &msg) // g
   // Run FOE estimation at rate_
   if (ros::Time::now().toSec() - prev_time >= period_)
   {
+      ROS_INFO("check4");
 
     // Fill OF buffers and run FOE estimation
 
     // double beforetime = ros::Time::now().toSec();
 
     // Run FOE estimation
+    //std::cout << "1" << std::endl;
     estimationServer();
 
     FoE_msg.x = (int)FoE_x;

@@ -1,4 +1,4 @@
-ExperimentName = 'Rolling-3030Downward';
+ExperimentName = 'StraightDown';
 filepath1 = append('../Experiments/',ExperimentName,'/trajectory.csv');
 filepath2 = append('../Experiments/',ExperimentName,'/FoE_recording.txt');
 filepath3 = append('../Experiments/',ExperimentName,'/Expected_FoE.csv');
@@ -32,8 +32,8 @@ sim_pitch = angles(:,3);
 FOV_X = 61.7164*pi/180;
 FOV_Y = 48.2168*pi/180;
 
-EstimatedFoE(:,2) =     atan(      (120-   EstimatedFoE(:,2)) * tan(FOV_X/2)/120   )   *180/pi;
-EstimatedFoE(:,3) = -   atan(      (90-    EstimatedFoE(:,3)) * tan(FOV_Y/2)/90    )   *180/pi;
+EstimatedFoE(:,2) =     atan(      (120-   EstimatedFoE(:,2))/120 * tan(FOV_X/2)   )   *180/pi;
+EstimatedFoE(:,3) = -   atan(      (90-    EstimatedFoE(:,3))/90  * tan(FOV_Y/2)   )   *180/pi;
 
 %EstimatedFoE(:,2) = EstimatedFoE(:,2) - 120;
 %EstimatedFoE(:,3) = -EstimatedFoE(:,3) + 90;
@@ -59,8 +59,10 @@ plot(EstimatedFoE(:,1),EstimatedFoE(:,2))
 hold on
 plot(TrueFoE(:,1),TrueFoE(:,2));
 ylim([-FOV_X*1.05,FOV_X*1.05]*180/pi)
-yline([-FOV_X,FOV_X]*180/pi,'--')
+yline([-FOV_X/2,FOV_X/2]*180/pi,'--')
 legend('Estimated FoE_x','True FoE_x','Lower bound','Upper bound')
+ylabel('FoE position [deg]') 
+xlabel('time [s]') 
 
 subplot(2,1,2)
 hold off
@@ -68,8 +70,16 @@ plot(EstimatedFoE(:,1),EstimatedFoE(:,3))
 hold on
 plot(TrueFoE(:,1),TrueFoE(:,3));
 ylim([-FOV_Y*1.05,FOV_Y*1.05]*180/pi)
-yline([-FOV_Y,FOV_Y]*180/pi,'--')
+yline([-FOV_Y/2,FOV_Y/2]*180/pi,'--')
 legend('Estimated FoE_y','True FoE_y','Lower bound','Upper bound')
+ylabel('FoE position [deg]') 
+xlabel('time [s]') 
+
+
+set(gcf,'Position',[100 100 700 800])
+
+filepath = append('../Experiments/',ExperimentName,'/FoE_validation.png');
+saveas(gcf,filepath)
 
 figure(2)
 subplot(2,1,1)
