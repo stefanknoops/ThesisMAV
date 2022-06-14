@@ -1,0 +1,14 @@
+<launch>
+  <!-- camera driver -->
+
+
+
+  <!-- visualization -->
+  <node name="dvs_of" pkg="dvs_of" type="dvs_of">
+      <remap from="/dvs/events" to="/cam0/events"/>
+    </node>
+
+
+  <node name="cpp_foe" pkg="cpp_foe" type="cpp_foe"/>
+
+</launch>

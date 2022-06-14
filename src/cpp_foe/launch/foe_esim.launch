@@ -1,0 +1,26 @@
+<launch>
+  <!-- camera driver -->
+     <arg name="config" />
+
+  <!-- Event camera simulator -->
+  <node name="esim_node" pkg="esim_ros" type="esim_node" args="
+    --v=1
+    --vmodule=data_provider_from_folder=10
+    --flagfile=$(find esim_ros)/$(arg config)
+    " output="screen"/>
+
+  <include file="$(find esim_ros)/launch/visualization.launch" />
+
+
+
+  <!-- visualization -->
+  <node name="dvs_of" pkg="dvs_of" type="dvs_of">
+      <remap from="/dvs/events" to="/cam0/events"/>
+      <remap from="/dvs/imu" to="/imu"/>
+
+    </node>
+
+
+  <node name="cpp_foe" pkg="cpp_foe" type="cpp_foe"/>
+
+</launch>

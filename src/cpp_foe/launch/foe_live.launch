@@ -1,0 +1,16 @@
+<launch>
+  <!-- camera driver -->
+
+
+  <node name="davis_ros_driver" pkg="davis_ros_driver" type="davis_ros_driver" output="screen" >
+        <remap from="camera_info" to="/dvs/camera_info"/>
+        <remap from="imu" to="/dvs/imu"/>
+  </node>
+
+  <!-- visualization -->
+  <node name="dvs_of" pkg="dvs_of" type="dvs_of"/>
+
+
+  <node name="cpp_foe" pkg="cpp_foe" type="cpp_foe"/>
+
+</launch>
