@@ -1,15 +1,17 @@
+%rng(0) %seeded
+
 frequency = 500;
 dt = 10^9/frequency; %in ns
-time = 7;
+time = 5;
 n_timesteps = time*10^9/dt;
-z_start = 5;
+z_start = 6;
 z_end = 1;
 
 FOV_X = 61.7164;
 FOV_Y = 48.2168;
 
 
-filename = 'Rolling-3030Downward';
+filename = 'Test';
 
 
 
@@ -21,27 +23,62 @@ t_sim = t/10^9;
 
 traj(:,1) = t;
 
-b = 0.01;
-x = zeros(n_timesteps,1);
-y = zeros(n_timesteps,1);
+n_components = 100;
+max_freq = 2;
+max_amp = 0.05;
+
+
+frequencies = max_freq * rand(1,n_components);
+amplitudes = 2*max_amp * rand(1,n_components) - max_amp;
+phase = pi/2 * rand(1,n_components);
+
+disp(frequencies)
+disp(amplitudes)
+
+x = sum(amplitudes.*sin(frequencies.*(traj(:,1)./10^9)+phase*pi/2),2);
+
+frequencies = max_freq * rand(1,n_components);
+amplitudes = 2*max_amp * rand(1,n_components) - max_amp;
+phase = pi/2 * rand(1,n_components);
+
+y = sum(amplitudes.*sin(frequencies.*(traj(:,1)./10^9)+phase*pi/2),2);
+
+
 z = linspace(z_start,z_end,n_timesteps).';
+
+vx_world = diff(x);
+vy_world = diff(y);
+vz_world = diff(z);
+
 
 traj(:,2:4) = [x,y,z];
 
 
+n_components = 100;
+max_freq = 5;
+max_amp = 1 *pi /180;
 
-%in rad
-yaw = zeros(n_timesteps,1);
-roll = pi/180.*linspace(-30,30,n_timesteps).';
-pitch = zeros(n_timesteps,1);
+frequencies = max_freq * rand(1,n_components);
+amplitudes = 2*max_amp * rand(1,n_components) - max_amp;
+phase = pi/2 * rand(1,n_components);
+yaw = sum(amplitudes.*sin(frequencies.*(traj(:,1)./10^9)+phase),2);
+
+frequencies = max_freq * rand(1,n_components);
+amplitudes = 2*max_amp * rand(1,n_components) - max_amp;
+phase = pi/2 * rand(1,n_components);
+roll = sum(amplitudes.*sin(frequencies.*(traj(:,1)./10^9)+phase),2);
+
+frequencies = max_freq * rand(1,n_components);
+amplitudes = 2*max_amp * rand(1,n_components) - max_amp;
+phase = pi/2 * rand(1,n_components);
+pitch = sum(amplitudes.*sin(frequencies.*(traj(:,1)./10^9)+phase),2);
 
 %%%EXAMPLES
 % sin(traj(:,1)/10^9)
 % linspace(z_start,z_end,n_timesteps).'
 % sin(traj(:,1)/10^9)+cos(2*traj(:,1)/10^9)/3
 
-% FUNCTIONS FOR RANDOM TRAJECTORIES. COOL BUT MIGHT NOT BE USEFUL DUE TO
-% SPLINES
+% FUNCTIONS FOR RANDOM TRAJECTORIES. 
 %b = 0.01;
 %x = cumsum(smooth( -b + (b+b)*rand(1,n_timesteps),500));
 %y = cumsum(smooth( -b + (b+b)*rand(1,n_timesteps),500));
@@ -93,7 +130,7 @@ writetable(T,filepath);
 
 
 figure(1)
-subplot(3,1,1);
+subplot(2,2,1);
 plot(t,[x,y,z]);
 legend('x','y','z');
 set(gca,'FontName','Arial','FontSize',12);
@@ -101,20 +138,28 @@ ylabel('position [m]')
 xlabel('time [ns]') 
 
 
-subplot(3,1,3);
+subplot(2,2,2);
 plot(t,[pitch,roll,yaw]);
 legend('pitch','roll','yaw')
 set(gca,'FontName','Arial','FontSize',12);
 xlabel('time [ns]') 
 ylabel('rotation in body frame [rad/s]') 
 
-subplot(3,1,2);
+subplot(2,2,3);
 plot(t(2:end),[vx.',vy.',vz.']);
 legend('vx','vy','vz')
 set(gca,'FontName','Arial','FontSize',12);
 ylabel('velocity in body frame [m/s]') 
 xlabel('time [ns]') 
-set(gcf,'Position',[100 100 700 800])
+%set(gcf,'Position',[100 100 700 800])
+
+subplot(2,2,4);
+plot(t(2:end),[vx_world,vy_world,vz_world]);
+legend('vx world','vy world','vz world')
+set(gca,'FontName','Arial','FontSize',12);
+ylabel('velocity in world frame [m/s]') 
+xlabel('time [ns]') 
+%set(gcf,'Position',[100 100 700 800])
 
 filepath = append('../Experiments/',filename,'/TrajectoryPlot.png');
 saveas(gcf,filepath)
@@ -136,11 +181,16 @@ yline([0],':')
 set(gca,'FontName','Arial','FontSize',12);
 
 
-set(gcf,'Position',[800 100 700 800])
+%set(gcf,'Position',[800 100 700 800])
 
 filepath = append('../Experiments/',filename,'/PlotFoE.png');
 saveas(gcf,filepath)
 hold off
+
+figure(3);
+plot3(x,y,z)
+title('3D trajectory')
+set(gca,'FontName','Arial','FontSize',12);
 
 
 

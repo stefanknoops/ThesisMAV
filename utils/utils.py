@@ -393,7 +393,7 @@ def dvs2vid_mask_half_res(data_path, sample_path, fps):
     currentTime = 0
     index = 0
     printProgressBar(index, DVS_BAG.get_message_count(), prefix = 'Progress:', suffix = 'Complete', length = 50)
-    for topic, msg, t in DVS_BAG.read_messages(topics=['/dvs/events']):
+    for topic, msg, t in DVS_BAG.read_messages(topics=['/cam0/events']):
         if not flag:
             flag = True
             init_time = msg.events[0].ts.to_nsec()*1e-9

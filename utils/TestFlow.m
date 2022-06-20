@@ -1,4 +1,4 @@
-ExperimentName = 'StraightDown';
+ExperimentName = 'Test';
 
 
 filepath1 = append('../Experiments/',ExperimentName,'/trajectory.csv');
