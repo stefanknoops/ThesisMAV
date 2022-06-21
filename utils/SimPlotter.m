@@ -1,4 +1,4 @@
-ExperimentName = 'Shaking2D';
+ExperimentName = 'Yawing';
 filepath1 = append('../Experiments/',ExperimentName,'/trajectory.csv');
 filepath2 = append('../Experiments/',ExperimentName,'/FoE_recording.txt');
 filepath3 = append('../Experiments/',ExperimentName,'/Expected_FoE.csv');

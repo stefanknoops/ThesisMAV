@@ -9,15 +9,15 @@ function PlotErrorViolins(ListOfExperiments)
 
     for i = 1:size(Experiments)
         Experiment = Experiments(i);
-        diff = abs(ExperimentData.(Experiment).FoE(:,1).' - ExperimentData.(Experiment).TrueFoE(:,1));
-        minn = min((diff));
+%         diff = abs(ExperimentData.(Experiment).FoE(:,1).' - ExperimentData.(Experiment).TrueFoE(:,1));
+%         minn = min((diff));
+% 
+%         indexlookup = mod(find(diff == minn),size(ExperimentData.(Experiment).TrueFoE,1));
+%         indexlookup(indexlookup == 0) = size(ExperimentData.(Experiment).TrueFoE,1);
 
-        indexlookup = mod(find(diff == minn),size(ExperimentData.(Experiment).TrueFoE,1));
-        indexlookup(indexlookup == 0) = size(ExperimentData.(Experiment).TrueFoE,1);
 
-
-        ErrListX.(Experiment)= ExperimentData.(Experiment).FoE(:,2) - ExperimentData.(Experiment).TrueFoE(indexlookup,2);
-        ErrListY.(Experiment) = ExperimentData.(Experiment).FoE(:,3) - ExperimentData.(Experiment).TrueFoE(indexlookup,3);
+        ErrListX.(Experiment) = ExperimentData.(Experiment).Error_X;
+        ErrListY.(Experiment) = ExperimentData.(Experiment).Error_Y;
 
 
 

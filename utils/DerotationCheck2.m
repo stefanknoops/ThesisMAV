@@ -1,4 +1,4 @@
-M = csvread("../Experiments/StraightDown/OF_LOGFILE_.txt");
+M = csvread("../Experiments/Yawing/OF_LOGFILE_.txt");
 
 time = M(:,1);
 x= M(:,2);
@@ -21,18 +21,19 @@ norm_y = (y-90)/90*0.75;
 mag_of = (unpro_u).^2 + (unpro_v).^2;
 mag_rot = (rot_u).^2 + (rot_v).^2;
 
-    figure(2)
+figure(2)
 
-    subplot(2,1,1);
-    scatter(norm_x,[mag_rot,mag_of]);
-    legend('Magnitude rotation','Magnitude optic flow')
-    xlabel('Normalized x coordinate')
-    ylabel('Vector magnitude')
-    subplot(2,1,2);
-    scatter(norm_y,[mag_rot,mag_of]);
-    legend('Magnitude rotation','Magnitude optic flow')
-    xlabel('Normalized y coordinate')
-    ylabel('Vector magnitude')
+subplot(2,1,1);
+scatter(norm_x,[mag_rot,mag_of]);
+legend('Magnitude rotation','Magnitude optic flow')
+xlabel('Normalized x coordinate')
+ylabel('Vector magnitude')
+subplot(2,1,2);
+scatter(norm_y,[mag_rot,mag_of]);
+legend('Magnitude rotation','Magnitude optic flow')
+xlabel('Normalized y coordinate')
+ylabel('Vector magnitude')
+    
 for i=1:100:size(time,1)
     figure(1)
 
@@ -44,10 +45,11 @@ for i=1:100:size(time,1)
     ylim([0,180])
         set(gca, 'YDir','reverse')
   
-    quiver(x(i:i+99),y(i:i+99),unpro_u(i:i+99),unpro_v(i:i+99),"Color","Black");
-    quiver(x(i:i+99),y(i:i+99),rot_u(i:i+99),rot_v(i:i+99),1,"Color","Red")
+    scaling = 100;
+    quiver(x(i:i+99),y(i:i+99),scaling*unpro_u(i:i+99),scaling*unpro_v(i:i+99),"Color","Black","AutoScale","off");
+    quiver(x(i:i+99),y(i:i+99),scaling*rot_u(i:i+99),scaling*rot_v(i:i+99),"Color","Red","AutoScale","off")
 
-    quiver(x(i:i+99),y(i:i+99),derot_u(i:i+99),derot_v(i:i+99),"Color","Blue");
+    quiver(x(i:i+99),y(i:i+99),scaling*derot_u(i:i+99),scaling*derot_v(i:i+99),"Color","Blue","AutoScale","off");
     
     disp([x(i:i+99),y(i:i+99),unpro_u(i:i+99),unpro_v(i:i+99),rot_u(i:i+99),rot_v(i:i+99),derot_u(i:i+99),derot_v(i:i+99)])
     axis equal

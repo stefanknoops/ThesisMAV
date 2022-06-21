@@ -1,4 +1,4 @@
-ExperimentName = 'Test';
+ExperimentName = 'Yawing';
 
 
 filepath1 = append('../Experiments/',ExperimentName,'/trajectory.csv');

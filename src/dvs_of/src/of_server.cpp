@@ -486,10 +486,10 @@ namespace dvs_of
         // Derotate the flow
         // Normalize the x,y coordinates
         x_nor = (FlowPacket.x / 120.f) - 1.f;
-        y_nor = ((FlowPacket.y / 90.f) - 1.f)*0.75 ; //scale as the image is not square
+        y_nor = ((FlowPacket.y / 90.f) - 1.f) * 0.75; // scale as the image is not square
 
-        rotational_u = -(-rates.q * (x_nor * x_nor + 1.f) + y_nor * (rates.r + rates.p * x_nor));
-        rotational_v =  -(rates.p * (1.f + y_nor * y_nor) - x_nor * (rates.r + rates.q * y_nor));
+        rotational_u = -(-rates.q + rates.r * y_nor + rates.p * x_nor * y_nor - rates.q * x_nor * x_nor);
+        rotational_v = -( rates.p - rates.r * x_nor - rates.q * x_nor * y_nor + rates.p * y_nor * y_nor);
 
         // std::cout << "rot_u = " << rotational_u << ", \t" << "rot_v = "<< rotational_v << std::endl;
 

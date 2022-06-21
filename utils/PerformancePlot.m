@@ -66,19 +66,19 @@ function PerformancePlot(ListOfExperiments)
 
         figure()
         subplot(2,2,1)
-        plot(ExperimentData.(Experiment).FoE(:,1),err_x)
-        yline(mean(err_x),'--')
+        plot(ExperimentData.(Experiment).FoE(:,1),ExperimentData.(Experiment).Error_X)
+        yline(mean(ExperimentData.(Experiment).Error_X),'--')
         subplot(2,2,3)
-        plot(ExperimentData.(Experiment).FoE(:,1),err_y)
-        yline(mean(err_y),'--')
+        plot(ExperimentData.(Experiment).FoE(:,1),ExperimentData.(Experiment).Error_Y)
+        yline(mean(ExperimentData.(Experiment).Error_Y),'--')
 
         subplot(2,2,2)
-        histogram(err_x,30);
+        histogram(ExperimentData.(Experiment).Error_X,30);
         subplot(2,2,4);
-        histogram(err_y,30);
+        histogram(ExperimentData.(Experiment).Error_Y,30);
 
-        disp("Mean absolute error x: "+string(mean(abs(err_x))))
-        disp("Mean absolute error y: "+string(mean(abs(err_y))))
+        disp("Mean absolute error x: "+string(mean(abs(ExperimentData.(Experiment).Error_X))))
+        disp("Mean absolute error y: "+string(mean(abs(ExperimentData.(Experiment).Error_Y))))
         disp("Median amount of flow vectors: "+string(median(ExperimentData.(Experiment).FoE(:,5))))
         
     end
