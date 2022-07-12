@@ -95,65 +95,17 @@ namespace dvs_of
         rates_t rate = {0, 0, 0, 0};
         this->rates_mutex.lock();
 
-        /*
-        float total_rates = 0.f;
-        // ROS_INFO("rate p %f",rate.p);
-
-
-        uint32_t idx = this->find_closest_rate_idx(ts);
-        uint32_t idx_now = (this->buffer_idx_ - 1 + this->length_) % this->length_;
-
-        if (idx > idx_now)
-        {
-            idx = idx_now;
-        }
-
-        while (idx != idx_now)
-        {
-            rate.p += this->buffer_[idx].p;
-            rate.q += this->buffer_[idx].q;
-            rate.r += this->buffer_[idx].r;
-
-            total_rates++;
-            idx = (idx + 1) % this->length_;
-        }
-        // Include the final rate
-        rate.p += this->buffer_[idx].p;
-        rate.q += this->buffer_[idx].q;
-        rate.r += this->buffer_[idx].r;
-        rate.ts = this->buffer_[idx_now].ts;
-        // ROS_INFO("rate p %f",rate.p);
-
-        total_rates++;
-        // ROS_INFO("idx_now %i", idx_now);
-        // ROS_INFO("total rates %f", total_rates);
-
-        rate.p /= total_rates;
-        rate.q /= total_rates;
-        rate.r /= total_rates;
-        //std::cout << "rate p old " << rate.p << "\n";
-
-        // ROS_INFO("total rates %f",total_rates);
-
-        // ROS_INFO("average rate p %f",rate.p);
-
-        // New average calculation
-
-        rate = {0,0,0,0};
-        */
-        // ROS_INFO("buffersize %i", NewBuffer.size());
-        int total = 0;
+       
         for (int i = 0; i < NewBuffer.size(); i++)
         {
             rate.p += NewBuffer[i].p;
             rate.q += NewBuffer[i].q;
             rate.r += NewBuffer[i].r;
-            total++;
         }
 
-        rate.p /= total;
-        rate.q /= total;
-        rate.r /= total;
+        rate.p /= NewBuffer.size();
+        rate.q /= NewBuffer.size();
+        rate.r /= NewBuffer.size();
         // std::cout << "rate p new " << rate.p << "\n";
         rate.ts = NewBuffer[NewBuffer.size() - 1].ts;
 
@@ -228,9 +180,18 @@ namespace dvs_of
         uint64_t tf;
         for (; it != myIMU->end(); it++)
         {                                     // DEPENDS ON COORDINATE SYSTEM, IN THIS CASE:
+            
+            //TODO: ADD SWITCH
+            
+            //DOWNWARD ORIENTATION
+            // this->p_filt.update((*it).gyr_x); // pitch
+            // this->q_filt.update((*it).gyr_y); // roll
+            // this->r_filt.update((*it).gyr_z); // yaw
+
+            //FORWARD ORIENTATION
             this->p_filt.update((*it).gyr_x); // pitch
-            this->q_filt.update((*it).gyr_y); // roll
-            this->r_filt.update((*it).gyr_z); // yaw
+            this->q_filt.update((*it).gyr_z); // yaw
+            this->r_filt.update((*it).gyr_y); // roll
             if ((*it).t >= last_ts + this->period_ && initialized)
             {
                 this->rates_mutex.lock();
@@ -253,7 +214,7 @@ namespace dvs_of
                 newRates.ts = last_ts;
                 NewBuffer.push_back(newRates);
 
-                if (NewBuffer.size() > 4)
+                if (NewBuffer.size() > 5)
                 {
                     NewBuffer.erase(NewBuffer.begin());
                 }
@@ -334,9 +295,9 @@ namespace dvs_of
      */
     void OpticFlow::initFlowState()
     {
-        this->myFlowState.r = 2;
-        this->myFlowState.minPixels = 8;
-        this->myFlowState.refPeriod = 200000; // in microseconds
+        this->myFlowState.r = 3;
+        this->myFlowState.minPixels = 10;
+        this->myFlowState.refPeriod = 300000; // in microseconds
         this->myFlowState.lastEventT = 0;
         this->myFlowState.flowRate = 0.f;
         this->myFlowState.rateSetpoint = 4000.f;
@@ -389,7 +350,7 @@ namespace dvs_of
         else
         {
             EventsFlow << this->myFlowPacket.t << "," << this->myFlowPacket.x << "," << this->myFlowPacket.y << "," << this->myFlowPacket.p << ",";
-            EventsFlow << this->myFlowPacket.u << "," << this->myFlowPacket.v << "," << rates.p << "," << rates.q << "," << rates.r << "," << d_u << "," << d_v << "," << rot_u << "," << rot_v << "," << this->FoE_x << std::endl;
+            EventsFlow << this->myFlowPacket.u << "," << this->myFlowPacket.v << "," << rates.p << "," << rates.q << "," << rates.r << "," << d_u << "," << d_v << "," << rot_u << "," << rot_v << "," << rates.ts << std::endl;
             EventsFlow.close();
         }
     }
@@ -418,7 +379,7 @@ namespace dvs_of
 
         this->initFlowState();
         this->determinePixelNeighborhood();
-        myRates = new RateBuffer(this->myFlowState.dtMax / 1e6f, 250);
+        myRates = new RateBuffer(this->myFlowState.dtMax / 1e6f, 500);
     }
 
     /**
@@ -438,11 +399,11 @@ namespace dvs_of
         this->determinePixelNeighborhood();
         if (ON_OFF_PROC)
         {
-            myRates = new RateBuffer(this->myFlowState.dtMax / 1e6f, 250);
+            myRates = new RateBuffer(this->myFlowState.dtMax / 1e6f, 500);
         }
         else
         {
-            myRates = new RateBuffer(this->myFlowState.dtMax / 1e6f, 250, SizeIMU);
+            myRates = new RateBuffer(this->myFlowState.dtMax / 1e6f, 500, SizeIMU);
         }
     }
 
@@ -484,9 +445,14 @@ namespace dvs_of
         rates = this->myRates->find_average_rate(FlowPacket.tP);
 
         // Derotate the flow
-        // Normalize the x,y coordinates
-        x_nor = (FlowPacket.x / 120.f) - 1.f;
-        y_nor = ((FlowPacket.y / 90.f) - 1.f) * 0.75; // scale as the image is not square
+        // // Normalize the x,y coordinates
+        //x_nor = 1.2*(((FlowPacket.x / 120.f) - 1.f));
+        //y_nor = 1.2*(((FlowPacket.y / 90.f) - 1.f)); // scale as the image is not square
+
+        x_nor = dvsGetUndistortedPixelX(FlowPacket.x,FlowPacket.y);
+        y_nor = dvsGetUndistortedPixelY(FlowPacket.x,FlowPacket.y); // scale as the image is not square
+
+        //std::cout << FlowPacket.x << ";" << x_nor << ";" << FlowPacket.y << ";" << y_nor << std::endl;
 
         rotational_u = -(-rates.q + rates.r * y_nor + rates.p * x_nor * y_nor - rates.q * x_nor * x_nor);
         rotational_v = -( rates.p - rates.r * x_nor - rates.q * x_nor * y_nor + rates.p * y_nor * y_nor);
@@ -528,17 +494,17 @@ namespace dvs_of
 
         // Project rotational component onto optic flow
         OF_proj = mag_OF_rot * cos(abs(pos_ang_OF_rot - pos_ang_OF));
-        OF_der_pre = mag_OF - OF_proj;
+        OF_der = mag_OF - OF_proj;
 
-        // Map only when rotational part does not exceed total flow
-        if (OF_der_pre > 0)
-        {
-            OF_der = OF_der_pre;
-        }
-        else
-        {
-            OF_der = 0;
-        }
+        //Map only when rotational part does not exceed total flow
+        // if (OF_der_pre > 0)
+        // {
+        //     OF_der = OF_der_pre;
+        // }
+        // else
+        // {
+        //     OF_der = 0;
+        // }
 
         // Return to (u,v) notation
         this->u_der = OF_der * cos(pos_ang_OF);
@@ -631,7 +597,6 @@ namespace dvs_of
 
             // Output OF to .txt file
             this->storeEventsFlow(u_der, v_der, derotate_mag, rates, rotational_u, rotational_v, ang_OF);
-
             OpticFlow::checkVectorDirection(this->myFlowPacket);
 
             // Check if rotation is too large
@@ -703,7 +668,7 @@ namespace dvs_of
                 imu_.acc_y = (double)(msg->linear_acceleration.y);
                 imu_.acc_z = (double)(msg->linear_acceleration.z);
 
-                imu_.gyr_x = -(float)(msg->angular_velocity.x);
+                imu_.gyr_x = (float)(msg->angular_velocity.x);
                 imu_.gyr_y = (float)(msg->angular_velocity.y);
                 imu_.gyr_z = (float)(msg->angular_velocity.z);
 
@@ -714,7 +679,6 @@ namespace dvs_of
         if (!myIMU.empty())
         {
             myOpticFlow->myRates->log_rates(&myIMU);
-            // ROS_INFO("imu");
         }
 
         IMU_rec_file << (msg->header.stamp.toNSec() / 1000) << ",";
@@ -758,7 +722,7 @@ namespace dvs_of
 
             if (!myEvents.empty())
             {
-
+                
                 myOpticFlow->computeOpticFlowVectors(&myEvents, &myIMU);
 
                 OF_pub_.publish(PacketPub_);
@@ -768,7 +732,6 @@ namespace dvs_of
                 countpackage.Forward = 0;
                 PacketPub_.flowpacketmsgs.clear();
 
-                // ROS_INFO("dvs");
             }
         }
     }

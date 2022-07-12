@@ -50,15 +50,15 @@
 #define DISPLAY         0    // 0: no display in terminal
 #define ON_OFF_PROC     true // true: on-line
 
-#define X_FOV_RADIUS    120
-#define Y_FOV_RADIUS    90 // max 90
+#define X_FOV_RADIUS    110
+#define Y_FOV_RADIUS    80 // max 90
 
 #define DIMX            240
 #define DIMY            180
 
 #define REJECT_OUTLIERS 1
 
-#define MAX_COUNTER     200 // equivalent to 1s of measurements (IMU)
+#define MAX_COUNTER     500 // equivalent to 0.5s of measurements (IMU)
 
 #define MAX_FLOW_MSGS 4096
 

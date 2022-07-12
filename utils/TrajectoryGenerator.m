@@ -4,14 +4,16 @@ frequency = 500;
 dt = 10^9/frequency; %in ns
 time = 5;
 n_timesteps = time*10^9/dt;
-z_start = 6;
-z_end = 1;
+z_start = 5;
+z_end = 0;
+
+
 
 FOV_X = 61.7164;
 FOV_Y = 48.2168;
 
 
-filename = 'Test';
+filename = 'Shaking2D_forward';
 
 
 
@@ -28,50 +30,27 @@ max_freq = 2;
 max_amp = 0.05;
 
 
-frequencies = max_freq * rand(1,n_components);
-amplitudes = 2*max_amp * rand(1,n_components) - max_amp;
-phase = pi/2 * rand(1,n_components);
 
-disp(frequencies)
-disp(amplitudes)
-
-x = sum(amplitudes.*sin(frequencies.*(traj(:,1)./10^9)+phase*pi/2),2);
-
-frequencies = max_freq * rand(1,n_components);
-amplitudes = 2*max_amp * rand(1,n_components) - max_amp;
-phase = pi/2 * rand(1,n_components);
-
-y = sum(amplitudes.*sin(frequencies.*(traj(:,1)./10^9)+phase*pi/2),2);
+x = 0.4*sin(2*traj(:,1)/10^9).*0.5.*(1*sin(2*traj(:,1)/10^9)+0.5*sin(3*traj(:,1)/10^9)+0.25*sin(traj(:,1)/10^9));
 
 
-z = linspace(z_start,z_end,n_timesteps).';
+y = linspace(z_start,z_end,n_timesteps).';
 
-vx_world = diff(x);
-vy_world = diff(y);
-vz_world = diff(z);
+
+z = 0.1*sin(2*traj(:,1)/10^9).*0.5.*(0.5*sin(2*traj(:,1)/10^9)+1.5*sin(3*traj(:,1)/10^9)+2*sin(1*traj(:,1)/10^9));
+
+vx_world = diff(x)/dt*10^9;
+vy_world = diff(y)/dt*10^9;
+vz_world = diff(z)/dt*10^9;
 
 
 traj(:,2:4) = [x,y,z];
 
 
-n_components = 100;
-max_freq = 5;
-max_amp = 1 *pi /180;
 
-frequencies = max_freq * rand(1,n_components);
-amplitudes = 2*max_amp * rand(1,n_components) - max_amp;
-phase = pi/2 * rand(1,n_components);
-yaw = sum(amplitudes.*sin(frequencies.*(traj(:,1)./10^9)+phase),2);
-
-frequencies = max_freq * rand(1,n_components);
-amplitudes = 2*max_amp * rand(1,n_components) - max_amp;
-phase = pi/2 * rand(1,n_components);
-roll = sum(amplitudes.*sin(frequencies.*(traj(:,1)./10^9)+phase),2);
-
-frequencies = max_freq * rand(1,n_components);
-amplitudes = 2*max_amp * rand(1,n_components) - max_amp;
-phase = pi/2 * rand(1,n_components);
-pitch = sum(amplitudes.*sin(frequencies.*(traj(:,1)./10^9)+phase),2);
+yaw = zeros(n_timesteps,1); %sin(3*traj(:,1)/10^9)./10.*(sin(0.5*traj(:,1)/10^9)+1*cos(2*traj(:,1)/10^9)-0.3*sin(traj(:,1)/10^9));
+roll = 0.5*sin(2*traj(:,1)/10^9); %sin(3*traj(:,1)/10^9)./10.*(0.2*cos(traj(:,1)/10^9)+0.8*sin(2*traj(:,1)/10^9)-0.5*sin(traj(:,1)/10^9));
+pitch = zeros(n_timesteps,1); %cos(3*traj(:,1)/10^9)./10.*(sin(traj(:,1)/10^9)+0.5*cos(0.5*traj(:,1)/10^9)+0.05*sin(2*traj(:,1)/10^9));
 
 %%%EXAMPLES
 % sin(traj(:,1)/10^9)

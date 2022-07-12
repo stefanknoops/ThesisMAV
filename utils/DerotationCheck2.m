@@ -16,10 +16,10 @@ rot_v = M(:,13);
 foe = M(:,14);
 
 norm_x = (x-120)/120;
-norm_y = (y-90)/90*0.75;
+norm_y = (y-90)/90;
 
-mag_of = (unpro_u).^2 + (unpro_v).^2;
-mag_rot = (rot_u).^2 + (rot_v).^2;
+mag_of = sqrt((unpro_u).^2 + (unpro_v).^2);
+mag_rot = sqrt((rot_u).^2 + (rot_v).^2);
 
 figure(2)
 
@@ -45,7 +45,7 @@ for i=1:100:size(time,1)
     ylim([0,180])
         set(gca, 'YDir','reverse')
   
-    scaling = 100;
+    scaling = 30;
     quiver(x(i:i+99),y(i:i+99),scaling*unpro_u(i:i+99),scaling*unpro_v(i:i+99),"Color","Black","AutoScale","off");
     quiver(x(i:i+99),y(i:i+99),scaling*rot_u(i:i+99),scaling*rot_v(i:i+99),"Color","Red","AutoScale","off")
 

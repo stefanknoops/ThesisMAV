@@ -30,6 +30,8 @@
 #include <ros/console.h>
 #include <numeric>
 
+
+
 //#include "estimateFoECPP.h"
 
 // Fill OF array with values
@@ -60,7 +62,6 @@ static std::vector<FlowPacket> fillOpticFlowArray()
 void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
                     double *FoE_y)
 {
-  ROS_INFO("check");
   int ArraySize = OpticFlow.size();
   // ROS_INFO("arraysize %i", ArraySize);
 
@@ -81,6 +82,8 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
   std::vector<std::vector<double>> HullLines;
   std::vector<std::vector<double>> HullRules;
   std::vector<std::vector<double>> HullPoints = InitialHullPoints;
+
+  bool NewHull = false;
   int MaxScore = 0;
   int MinScore = 10000;
   bool Illegal;
@@ -449,68 +452,71 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
 
     if (IterationScore > MaxScore)
     {
+      NewHull = true;
       MaxScore = IterationScore;
       BestHull = HullPoints;
       BestHullLines = HullLines;
     }
   }
 
-  double FOEX = 0;
-  double FOEY = 0;
-  for (int i = 0; i < BestHull.size(); i++)
+  if (NewHull)
   {
-    // ROS_INFO("point %i: %lf, %lf", i, BestHull[i][0], BestHull[i][1]);
-    FOEX = FOEX + BestHull[i][0];
-    FOEY = FOEY + BestHull[i][1];
-    // ROS_INFO("FOEX %lf", FOEX);
-    // ROS_INFO("FOEY %lf", FOEY);
-  }
-  // std::cout << FOEX / (double)BestHull.size() << "," << FOEY / (double)BestHull.size() << std::endl;
-  FoE_hist_x.push_back(FOEX / (double)BestHull.size());
-  FoE_hist_y.push_back(FOEY / (double)BestHull.size());
+    double FOEX = 0;
+    double FOEY = 0;
+    for (int i = 0; i < BestHull.size(); i++)
+    {
+      // ROS_INFO("point %i: %lf, %lf", i, BestHull[i][0], BestHull[i][1]);
+      FOEX = FOEX + BestHull[i][0];
+      FOEY = FOEY + BestHull[i][1];
+      // ROS_INFO("FOEX %lf", FOEX);
+      // ROS_INFO("FOEY %lf", FOEY);
+    }
+    // std::cout << FOEX / (double)BestHull.size() << "," << FOEY / (double)BestHull.size() << std::endl;
+    FoE_hist_x.push_back(FOEX / (double)BestHull.size());
+    FoE_hist_y.push_back(FOEY / (double)BestHull.size());
 
-  *FoE_x = std::accumulate(FoE_hist_x.begin(), FoE_hist_x.end(), 0.0) / FoE_hist_x.size();
-  *FoE_y = std::accumulate(FoE_hist_y.begin(), FoE_hist_y.end(), 0.0) / FoE_hist_y.size();
+    *FoE_x = std::accumulate(FoE_hist_x.begin(), FoE_hist_x.end(), 0.0) / FoE_hist_x.size();
+    *FoE_y = std::accumulate(FoE_hist_y.begin(), FoE_hist_y.end(), 0.0) / FoE_hist_y.size();
 
-  /*
+    /*
 
-    tan30 = 120/XX;
+      tan30 = 120/XX;
 
-    XX = 120/tan30
+      XX = 120/tan30
 
-    FOEangX = atan(FoE_x / (120/tan30)) = atan(FoE_x *tan30 / 120)
+      FOEangX = atan(FoE_x / (120/tan30)) = atan(FoE_x *tan30 / 120)
 
-    float XX = std::atan(30) * 120;
+      float XX = std::atan(30) * 120;
 
-    float FoE_angle_X = FoE_x/NumPixels_X
-  */
+      float FoE_angle_X = FoE_x/NumPixels_X
+    */
 
-  int num_average = 3;
-  if (FoE_hist_x.size() > num_average)
-  {
-    FoE_hist_x.erase(FoE_hist_x.begin());
-    FoE_hist_y.erase(FoE_hist_y.begin());
-  }
+    if (FoE_hist_x.size() > num_average)
+    {
+      FoE_hist_x.erase(FoE_hist_x.begin());
+      FoE_hist_y.erase(FoE_hist_y.begin());
+    }
 
-  int64_t current_time = OpticFlow[OpticFlow.size()-1].t;
+    int64_t current_time = OpticFlow[0].t;
 
-  FoE_rec_file << current_time << ", " << *FoE_x << ", " << *FoE_y << ", " << num_average << ", " << ArraySize << std::endl;
+    FoE_rec_file << current_time << ", " << *FoE_x << ", " << *FoE_y << ", " << FOEX / (double)BestHull.size() << ", " << FOEY / (double)BestHull.size() << ", " << num_average << ", " << ArraySize << std::endl;
 
-  for (int i = 0; i < BestHullLines.size(); i++)
-  { // std::cout << "besthull" << current_time << "," << BestHullLines[i][0] << "," << BestHullLines[i][1] << "," << BestHullLines[i][2] << std::endl;
+    for (int i = 0; i < BestHullLines.size(); i++)
+    { // std::cout << "besthull" << current_time << "," << BestHullLines[i][0] << "," << BestHullLines[i][1] << "," << BestHullLines[i][2] << std::endl;
 
-    HL_log_file << current_time << "," << BestHullLines[i][0] << "," << BestHullLines[i][1] << "," << BestHullLines[i][2] << std::endl;
-  }
+      HL_log_file << current_time << "," << BestHullLines[i][0] << "," << BestHullLines[i][1] << "," << BestHullLines[i][2] << std::endl;
+    }
 
-  for (int i = 0; i < BestHull.size(); i++)
-  {
-    HP_log_file << current_time << "," << BestHull[i][0] << "," << BestHull[i][1] << std::endl;
-  }
+    for (int i = 0; i < BestHull.size(); i++)
+    {
+      HP_log_file << current_time << "," << BestHull[i][0] << "," << BestHull[i][1] << std::endl;
+    }
 
-  for (int i = 0; i < ArraySize; i++)
-  {
-    // std::cout << current_time << "," << 0 << "," << OpticFlow[i].x << "," << OpticFlow[i].y << "," << OpticFlow[i].u << "," << OpticFlow[i].v << std::endl
-    FoE_flow_rec_file << current_time << "," << OpticFlow[i].x << "," << OpticFlow[i].y << "," << OpticFlow[i].u << "," << OpticFlow[i].v << "," << OpticFlow[i].ru << "," << OpticFlow[i].rv << std::endl;
+    for (int i = 0; i < ArraySize; i++)
+    {
+      // std::cout << current_time << "," << 0 << "," << OpticFlow[i].x << "," << OpticFlow[i].y << "," << OpticFlow[i].u << "," << OpticFlow[i].v << std::endl
+      FoE_flow_rec_file << current_time << "," << OpticFlow[i].x << "," << OpticFlow[i].y << "," << OpticFlow[i].u << "," << OpticFlow[i].v << "," << OpticFlow[i].ru << "," << OpticFlow[i].rv << std::endl;
+    }
   }
 }
 
@@ -518,19 +524,18 @@ void estimationServer()
 {
   // Fill final OF buffer to be used by FOE estimation
   log_OF(&myOF);
-  //std::cout << "2" << std::endl;
+  // std::cout << "2" << std::endl;
 
   std::vector<FlowPacket> optic_flow;
   int buffersize = final_buffer.size();
   // ROS_INFO("estimationserver buffersize: %i", buffersize);
-  //std::cout << "size: " << final_buffer.size() << std::endl;
-  int min_vectors = 0;
+  // std::cout << "size: " << final_buffer.size() << std::endl;
 
   if (final_buffer.size() > min_vectors) // min amount of vectors required
   {
 
     // double beforetime = ros::Time::now().toSec();
-    //std::cout << "3" << std::endl;
+    // std::cout << "3" << std::endl;
 
     // Run FOE estimation
     estimateFoECPP(final_buffer, &FoE_x, &FoE_y);
@@ -540,7 +545,6 @@ void estimationServer()
 
     // ROS_INFO("estimateFoECPP time: %f", calctime);
 
-    prev_time = ros::Time::now().toSec();
 
     // Publish the FOE onto its topic
   }
@@ -567,15 +571,16 @@ void opticflowCallback(const dvs_of_msg::FlowPacketMsgArray::ConstPtr &msg) // g
   }
 
   // Run FOE estimation at rate_
-  if (ros::Time::now().toSec() - prev_time >= period_)
+  if (ros::Time::now().toNSec() - prev_time >= period_)
   {
+    prev_time = ros::Time::now().toNSec();
 
     // Fill OF buffers and run FOE estimation
 
     // double beforetime = ros::Time::now().toSec();
 
     // Run FOE estimation
-    //std::cout << "1" << std::endl;
+    // std::cout << "1" << std::endl;
     estimationServer();
 
     FoE_msg.x = (int)FoE_x;
@@ -596,10 +601,10 @@ void log_OF(std::vector<FlowPacket> *myOF)
   prepMutex.lock();
   for (std::vector<FlowPacket>::iterator it = myOF->begin(); it != myOF->end(); it++)
   {
-    double diff = last_ts - period_;
-    double currenttime = (*it).t;
-    if (currenttime >= diff)
-    {
+    //double diff = last_ts - period_;
+    //double currenttime = (*it).t;
+    //if (currenttime >= diff)
+    //{
 
       last_ts = (*it).t;
       // OFvec_buf.x = (*it).x;
@@ -608,9 +613,7 @@ void log_OF(std::vector<FlowPacket> *myOF)
       // OFvec_buf.v = (*it).v;
       // OFvec_buf.t = (*it).t;
       final_buffer.push_back((*it));
-
-
-    }
+    //}
   }
   prepMutex.unlock();
   myOF->clear();

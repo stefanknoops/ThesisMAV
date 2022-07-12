@@ -1,4 +1,4 @@
-ExperimentName = 'Yawing';
+ExperimentName = 'Pitching';
 
 
 filepath1 = append('../Experiments/',ExperimentName,'/trajectory.csv');
@@ -7,6 +7,18 @@ filepath3 = append('../Experiments/',ExperimentName,'/FoE_flow_recording.txt');
 
 filepath4 = append('../Experiments/',ExperimentName,'/HL_recording.txt');
 filepath5 = append('../Experiments/',ExperimentName,'/HP_recording.txt');
+
+M = csvread("../Experiments/"+ExperimentName+"/OF_LOGFILE_.txt");
+p = M(:,7);
+q = M(:,8);
+r = M(:,9);
+time = M(:,1);
+
+clear M
+
+figure(21)
+clf;
+plot(time,[p,q,r])
 
 traj = csvread(filepath1,1);
 
@@ -25,8 +37,8 @@ flowindex = 1;
 HPindex = 1;
 HLindex = 1;
 
-figure(2)
-
+figure(22)
+clf;
 
 disp('figure plotted')
 for i = 1:size(FoE,1)
@@ -35,15 +47,19 @@ for i = 1:size(FoE,1)
     xlim([0,240])
     ylim([0,180])
     %axis equal
-    viscircles([FoE(i,2),FoE(i,3)],5);
+    viscircles([FoE(i,2),FoE(i,3)],10);
+    viscircles([FoE(i,4),FoE(i,5)],5);
+
     %disp([FoE(i,2),FoE(i,3)])
     hold on
     %disp(flowindex)
     Indeces = (Flow(:,1) == FoE(i,1));
     CorrespondingFlow = Flow(Indeces,:);
+    
+    scaling = 10;
 
-    quiver(CorrespondingFlow(:,2),CorrespondingFlow(:,3),CorrespondingFlow(:,4),CorrespondingFlow(:,5),'Color','Red')
-    quiver(CorrespondingFlow(:,2),CorrespondingFlow(:,3),CorrespondingFlow(:,6),CorrespondingFlow(:,7),'Color','Blue')
+    quiver(CorrespondingFlow(:,2),CorrespondingFlow(:,3),scaling*CorrespondingFlow(:,4),scaling*CorrespondingFlow(:,5),'Color','Red',"AutoScale","off")
+    quiver(CorrespondingFlow(:,2),CorrespondingFlow(:,3),scaling*CorrespondingFlow(:,6),scaling*CorrespondingFlow(:,7),'Color','Blue',"AutoScale","off")
 
     
 
@@ -72,7 +88,7 @@ for i = 1:size(FoE,1)
     xlim([0,240])
     ylim([0,180])
     disp('new, i = '+string(i)+', size = '+string(size(CorrespondingFlow,1))+', time = '+string((FoE(i,1)-FoE(1,1))/10^6))
-        legend('Derotated','Not derotated');
+    legend('Derotated','Not derotated');
 
     pause();
     
