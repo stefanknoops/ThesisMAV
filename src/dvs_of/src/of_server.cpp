@@ -95,7 +95,6 @@ namespace dvs_of
         rates_t rate = {0, 0, 0, 0};
         this->rates_mutex.lock();
 
-       
         for (int i = 0; i < NewBuffer.size(); i++)
         {
             rate.p += NewBuffer[i].p;
@@ -131,7 +130,7 @@ namespace dvs_of
         this->period_ = 1e6 / rate;
         this->length_ = (int32_t)(time_window * rate);
         this->buffer_ = (rates_t *)std::calloc(this->length_, sizeof(rates_t));
-        std::cout << "\t ... On-line processing set at: " << BoolToString(ON_OFF_PROC) << std::endl;
+        //std::cout << "\t ... On-line processing set at: " << BoolToString(ON_OFF_PROC) << std::endl;
         ROS_INFO_STREAM(" ... On-line processing set at: " << BoolToString(ON_OFF_PROC));
     }
 
@@ -171,6 +170,7 @@ namespace dvs_of
         static rates_t zero_rates = {0.f, 0.f, 0.f, 0};
         static int64_t last_ts = 0;
 
+        //ROS_INFO("1");
         // Pass gyro through median filter to remove outliers
         // std::cout << "\n\t ... Filtering IMU." << std::endl;
         // ROS_INFO_STREAM(" ... Filtering IMU.");
@@ -179,65 +179,72 @@ namespace dvs_of
         uint64_t t0 = (*it).t;
         uint64_t tf;
         for (; it != myIMU->end(); it++)
-        {                                     // DEPENDS ON COORDINATE SYSTEM, IN THIS CASE:
-            
-            //TODO: ADD SWITCH
-            
-            //DOWNWARD ORIENTATION
-            // this->p_filt.update((*it).gyr_x); // pitch
-            // this->q_filt.update((*it).gyr_y); // roll
-            // this->r_filt.update((*it).gyr_z); // yaw
+        { // DEPENDS ON COORDINATE SYSTEM, IN THIS CASE:
+            //ROS_INFO("2");
 
-            //FORWARD ORIENTATION
+            // TODO: ADD SWITCH
+
+            // DOWNWARD ORIENTATION
+            //  this->p_filt.update((*it).gyr_x); // pitch
+            //  this->q_filt.update((*it).gyr_y); // roll
+            //  this->r_filt.update((*it).gyr_z); // yaw
+
+            // FORWARD ORIENTATION
             this->p_filt.update((*it).gyr_x); // pitch
             this->q_filt.update((*it).gyr_z); // yaw
             this->r_filt.update((*it).gyr_y); // roll
             if ((*it).t >= last_ts + this->period_ && initialized)
-            {
-                this->rates_mutex.lock();
-                last_ts = (*it).t;
-
-                /*
-                //("buffer idx input %i",this->buffer_idx_);
-
-                this->buffer_[this->buffer_idx_].p = this->p_filt.get_median() - zero_rates.p;
-                this->buffer_[this->buffer_idx_].q = this->q_filt.get_median() - zero_rates.q;
-                this->buffer_[this->buffer_idx_].r = this->r_filt.get_median() - zero_rates.r;
-                this->buffer_[this->buffer_idx_].ts = last_ts;
-                this->buffer_idx_ = (this->buffer_idx_ + 1) % this->length_;
-                */
-                rates_t newRates;
-
-                newRates.p = this->p_filt.get_median() - zero_rates.p;
-                newRates.q = this->q_filt.get_median() - zero_rates.q;
-                newRates.r = this->r_filt.get_median() - zero_rates.r;
-                newRates.ts = last_ts;
-                NewBuffer.push_back(newRates);
-
-                if (NewBuffer.size() > 5)
+                //ROS_INFO("3");
                 {
-                    NewBuffer.erase(NewBuffer.begin());
-                }
+                    this->rates_mutex.lock();
+                    last_ts = (*it).t;
+                    //ROS_INFO("4");
+                    /*
+                    //("buffer idx input %i",this->buffer_idx_);
 
-                this->rates_mutex.unlock();
-            }
+                    this->buffer_[this->buffer_idx_].p = this->p_filt.get_median() - zero_rates.p;
+                    this->buffer_[this->buffer_idx_].q = this->q_filt.get_median() - zero_rates.q;
+                    this->buffer_[this->buffer_idx_].r = this->r_filt.get_median() - zero_rates.r;
+                    this->buffer_[this->buffer_idx_].ts = last_ts;
+                    this->buffer_idx_ = (this->buffer_idx_ + 1) % this->length_;
+                    */
+                    rates_t newRates;
+                    //ROS_INFO("5");
+                    newRates.p = this->p_filt.get_median() - zero_rates.p;
+                    newRates.q = this->q_filt.get_median() - zero_rates.q;
+                    newRates.r = this->r_filt.get_median() - zero_rates.r;
+                    newRates.ts = last_ts;
+                    NewBuffer.push_back(newRates);
+                    //ROS_INFO("6");
+                    if (NewBuffer.size() > 5)
+                    {
+                        //ROS_INFO("7");
+                        NewBuffer.erase(NewBuffer.begin());
+                    }
+
+                    this->rates_mutex.unlock();
+                }
         }
 
         // Get average zero reading
         if (!initialized)
         {
+            //ROS_INFO("8");
             init_counter++;
             zero_rates.p += this->p_filt.get_median();
             zero_rates.q += this->q_filt.get_median();
             zero_rates.r += this->r_filt.get_median();
-            if (init_counter >= 100) //>= 200)
-            {                        // ~ 1s of measurement (was 1.5 in reality)
+            //ROS_INFO("9");
+            if (init_counter >= 500) //>= 200)
+            {           
+                //ROS_INFO("10");             // ~ 0.5s of measurement @ 1000 Hz (was 1.5 in reality)
                 zero_rates.p /= init_counter;
                 zero_rates.q /= init_counter;
                 zero_rates.r /= init_counter;
                 initialized = true;
-                ROS_INFO("Zero rates: %f %f %f", zero_rates.p, zero_rates.q, zero_rates.r);
+                //ROS_INFO("Zero rates: %f %f %f", zero_rates.p, zero_rates.q, zero_rates.r);
             }
+            //ROS_INFO("11");
         }
     }
 
@@ -295,9 +302,9 @@ namespace dvs_of
      */
     void OpticFlow::initFlowState()
     {
-        this->myFlowState.r = 3;
-        this->myFlowState.minPixels = 10;
-        this->myFlowState.refPeriod = 300000; // in microseconds
+        this->myFlowState.r = 2;
+        this->myFlowState.minPixels = 8;
+        this->myFlowState.refPeriod = 200000; // in microseconds
         this->myFlowState.lastEventT = 0;
         this->myFlowState.flowRate = 0.f;
         this->myFlowState.rateSetpoint = 4000.f;
@@ -446,16 +453,16 @@ namespace dvs_of
 
         // Derotate the flow
         // // Normalize the x,y coordinates
-        //x_nor = 1.2*(((FlowPacket.x / 120.f) - 1.f));
-        //y_nor = 1.2*(((FlowPacket.y / 90.f) - 1.f)); // scale as the image is not square
+        // x_nor = 1.2*(((FlowPacket.x / 120.f) - 1.f));
+        // y_nor = 1.2*(((FlowPacket.y / 90.f) - 1.f)); // scale as the image is not square
 
-        x_nor = dvsGetUndistortedPixelX(FlowPacket.x,FlowPacket.y);
-        y_nor = dvsGetUndistortedPixelY(FlowPacket.x,FlowPacket.y); // scale as the image is not square
+        x_nor = dvsGetUndistortedPixelX(FlowPacket.x, FlowPacket.y);
+        y_nor = dvsGetUndistortedPixelY(FlowPacket.x, FlowPacket.y); // scale as the image is not square
 
-        //std::cout << FlowPacket.x << ";" << x_nor << ";" << FlowPacket.y << ";" << y_nor << std::endl;
+        // std::cout << FlowPacket.x << ";" << x_nor << ";" << FlowPacket.y << ";" << y_nor << std::endl;
 
         rotational_u = -(-rates.q + rates.r * y_nor + rates.p * x_nor * y_nor - rates.q * x_nor * x_nor);
-        rotational_v = -( rates.p - rates.r * x_nor - rates.q * x_nor * y_nor + rates.p * y_nor * y_nor);
+        rotational_v = -(rates.p - rates.r * x_nor - rates.q * x_nor * y_nor + rates.p * y_nor * y_nor);
 
         // std::cout << "rot_u = " << rotational_u << ", \t" << "rot_v = "<< rotational_v << std::endl;
 
@@ -496,15 +503,15 @@ namespace dvs_of
         OF_proj = mag_OF_rot * cos(abs(pos_ang_OF_rot - pos_ang_OF));
         OF_der = mag_OF - OF_proj;
 
-        //Map only when rotational part does not exceed total flow
-        // if (OF_der_pre > 0)
-        // {
-        //     OF_der = OF_der_pre;
-        // }
-        // else
-        // {
-        //     OF_der = 0;
-        // }
+        // Map only when rotational part does not exceed total flow
+        //  if (OF_der_pre > 0)
+        //  {
+        //      OF_der = OF_der_pre;
+        //  }
+        //  else
+        //  {
+        //      OF_der = 0;
+        //  }
 
         // Return to (u,v) notation
         this->u_der = OF_der * cos(pos_ang_OF);
@@ -722,7 +729,7 @@ namespace dvs_of
 
             if (!myEvents.empty())
             {
-                
+
                 myOpticFlow->computeOpticFlowVectors(&myEvents, &myIMU);
 
                 OF_pub_.publish(PacketPub_);
@@ -731,7 +738,6 @@ namespace dvs_of
                 countpackage.Backward = 0;
                 countpackage.Forward = 0;
                 PacketPub_.flowpacketmsgs.clear();
-
             }
         }
     }

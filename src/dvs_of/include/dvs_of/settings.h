@@ -50,8 +50,8 @@
 #define DISPLAY         0    // 0: no display in terminal
 #define ON_OFF_PROC     true // true: on-line
 
-#define X_FOV_RADIUS    110
-#define Y_FOV_RADIUS    80 // max 90
+#define X_FOV_RADIUS    120
+#define Y_FOV_RADIUS    90 // max 90
 
 #define DIMX            240
 #define DIMY            180

@@ -30,8 +30,6 @@
 #include <ros/console.h>
 #include <numeric>
 
-
-
 //#include "estimateFoECPP.h"
 
 // Fill OF array with values
@@ -88,7 +86,7 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
   int MinScore = 10000;
   bool Illegal;
 
-  int AmountOfIterations = 50;
+  int AmountOfIterations = 100;
 
   std::random_device RandomSeed;
   std::mt19937 RandomNumber(RandomSeed());
@@ -466,14 +464,33 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
     for (int i = 0; i < BestHull.size(); i++)
     {
       // ROS_INFO("point %i: %lf, %lf", i, BestHull[i][0], BestHull[i][1]);
-      FOEX = FOEX + BestHull[i][0];
-      FOEY = FOEY + BestHull[i][1];
+      FOEX = (FOEX + BestHull[i][0]);
+      FOEY = (FOEY + BestHull[i][1]);
       // ROS_INFO("FOEX %lf", FOEX);
       // ROS_INFO("FOEY %lf", FOEY);
     }
     // std::cout << FOEX / (double)BestHull.size() << "," << FOEY / (double)BestHull.size() << std::endl;
-    FoE_hist_x.push_back(FOEX / (double)BestHull.size());
-    FoE_hist_y.push_back(FOEY / (double)BestHull.size());
+
+    FOEX = FOEX / (double)BestHull.size();
+    FOEY = FOEY / (double)BestHull.size();
+    
+    if (FOEX != FOV_X / 2)
+    {
+      FoE_hist_x.push_back(FOEX);
+    }
+    if (FOEY != FOV_Y / 2)
+    {
+      FoE_hist_y.push_back(FOEY);
+    }
+
+    if (FoE_hist_x.size() > num_average)
+    {
+      FoE_hist_x.erase(FoE_hist_x.begin());
+    }
+    if (FoE_hist_y.size() > num_average)
+    {
+      FoE_hist_y.erase(FoE_hist_y.begin());
+    }
 
     *FoE_x = std::accumulate(FoE_hist_x.begin(), FoE_hist_x.end(), 0.0) / FoE_hist_x.size();
     *FoE_y = std::accumulate(FoE_hist_y.begin(), FoE_hist_y.end(), 0.0) / FoE_hist_y.size();
@@ -491,15 +508,9 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
       float FoE_angle_X = FoE_x/NumPixels_X
     */
 
-    if (FoE_hist_x.size() > num_average)
-    {
-      FoE_hist_x.erase(FoE_hist_x.begin());
-      FoE_hist_y.erase(FoE_hist_y.begin());
-    }
-
     int64_t current_time = OpticFlow[0].t;
 
-    FoE_rec_file << current_time << ", " << *FoE_x << ", " << *FoE_y << ", " << FOEX / (double)BestHull.size() << ", " << FOEY / (double)BestHull.size() << ", " << num_average << ", " << ArraySize << std::endl;
+    FoE_rec_file << current_time << ", " << *FoE_x << ", " << *FoE_y << ", " << FOEX << ", " << FOEY << ", " << FoE_hist_x.size() << ", " << ArraySize << std::endl;
 
     for (int i = 0; i < BestHullLines.size(); i++)
     { // std::cout << "besthull" << current_time << "," << BestHullLines[i][0] << "," << BestHullLines[i][1] << "," << BestHullLines[i][2] << std::endl;
@@ -544,7 +555,6 @@ void estimationServer()
     final_buffer.clear();
 
     // ROS_INFO("estimateFoECPP time: %f", calctime);
-
 
     // Publish the FOE onto its topic
   }
@@ -601,18 +611,18 @@ void log_OF(std::vector<FlowPacket> *myOF)
   prepMutex.lock();
   for (std::vector<FlowPacket>::iterator it = myOF->begin(); it != myOF->end(); it++)
   {
-    //double diff = last_ts - period_;
-    //double currenttime = (*it).t;
-    //if (currenttime >= diff)
+    // double diff = last_ts - period_;
+    // double currenttime = (*it).t;
+    // if (currenttime >= diff)
     //{
 
-      last_ts = (*it).t;
-      // OFvec_buf.x = (*it).x;
-      // OFvec_buf.y = (*it).y;
-      // OFvec_buf.u = (*it).u;
-      // OFvec_buf.v = (*it).v;
-      // OFvec_buf.t = (*it).t;
-      final_buffer.push_back((*it));
+    last_ts = (*it).t;
+    // OFvec_buf.x = (*it).x;
+    // OFvec_buf.y = (*it).y;
+    // OFvec_buf.u = (*it).u;
+    // OFvec_buf.v = (*it).v;
+    // OFvec_buf.t = (*it).t;
+    final_buffer.push_back((*it));
     //}
   }
   prepMutex.unlock();

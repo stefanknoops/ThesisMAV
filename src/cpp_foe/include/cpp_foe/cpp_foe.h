@@ -68,6 +68,9 @@ std::vector<double> FoE_hist_y {};
 double FoE_x;
 double FoE_y;
 
+int FOV_X = 240;
+int FOV_Y = 180;
+
 int min_vectors = 0;
 int num_average = 5;
 
@@ -94,8 +97,8 @@ uint64_t last_ts = 0;
 double prev_time = 0.0;
 
 // Processing rate (Hz) for FoE estimation
-double rate_ = 200;
-double period_ = 1.0 / rate_ *10e9; //in nSec
+double rate_ = 1000;
+double period_ = 1.0 / rate_ *1e9; //in nSec
 
 // Logging function for incoming OF
 void log_OF(std::vector<FlowPacket> *myOF);

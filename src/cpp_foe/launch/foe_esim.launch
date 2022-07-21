@@ -14,13 +14,13 @@
 
 
   <!-- visualization -->
-  <node name="dvs_of" pkg="dvs_of" type="dvs_of">
+  <node name="dvs_of" pkg="dvs_of" type="dvs_of" output="screen">
       <remap from="/dvs/events" to="/cam0/events"/>
       <remap from="/dvs/imu" to="/imu"/>
 
     </node>
 
 
-  <node name="cpp_foe" pkg="cpp_foe" type="cpp_foe"/>
+  <node name="cpp_foe" pkg="cpp_foe" type="cpp_foe" output="screen" />
 
 </launch>
