@@ -39,6 +39,8 @@ static std::vector<FlowPacket> fillOpticFlowArray()
 
   // Set the size of the array (COLUMN MAJOR)
   int OFbuff_size = final_buffer.size();
+
+  int limit_vec = 10; // for limiting the total amount of vectors;
   int buf_idx = 0;
 
   // result.set_size(OFbuff_size, 4);
@@ -46,7 +48,7 @@ static std::vector<FlowPacket> fillOpticFlowArray()
   prepMutex.lock();
 
   // Loop over the array to initialize each element.
-  for (int idx0 = 0; idx0 < OFbuff_size; idx0++)
+  for (int idx0 = 0; idx0 < limit_vec; idx0++)
   {
     FlowPacket currentFlow = final_buffer[idx0];
     result.push_back(currentFlow);
@@ -60,6 +62,22 @@ static std::vector<FlowPacket> fillOpticFlowArray()
 void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
                     double *FoE_y)
 {
+  ROS_INFO("***STARTING NEW ESTIMATION***");
+  // // FOR LIMITING THE AMOUNT OF FLOW VECTORS
+  // int vec_limit = 10;
+  // std::vector<FlowPacket> temp = OpticFlow;
+  // OpticFlow.clear();
+  // int factor = 1;
+
+  // for (int i = 0; i < vec_limit; i++)
+  // {
+  //   // temp[i].u *=factor;
+  //   // temp[i].v *=factor;
+  //   OpticFlow.push_back(temp[i]);
+  //   std::cout << "vector " << i << ": x=" << temp[i].x << ", y=" << temp[i].y << ", u=" << temp[i].u << ", v=" << temp[i].v << std::endl;
+  //   // factor *= -1;
+  // }
+
   int ArraySize = OpticFlow.size();
   // ROS_INFO("arraysize %i", ArraySize);
 
@@ -84,9 +102,9 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
   bool NewHull = false;
   int MaxScore = 0;
   int MinScore = 10000;
-  bool Illegal;
+  int MaxUsed = 0;
 
-  int AmountOfIterations = 100;
+  bool Illegal;
 
   std::random_device RandomSeed;
   std::mt19937 RandomNumber(RandomSeed());
@@ -152,12 +170,12 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
   // }
 
   // AmountOfIterations = std::min(AmountOfIterations,ArraySize);
-  int MaxFailures = 1;
 
   for (int n = 0; n < AmountOfIterations; n++)
-  { // for n iterations
+  {
+    // for n iterations
     // ROS_INFO("iteration %i", n);
-    //   initiate hull
+    //    initiate hull
     std::vector<int> VectorInHull(NormalLines.size(), 0);
     std::vector<int> VectorTried(NormalLines.size(), 0);
 
@@ -168,7 +186,7 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
     bool StopSearch = false;
     int StopCount = 0;
     std::vector<double> RandomNormalRule;
-
+    int AmountOfVectorsUsed = 0;
     // set all vectors to not tried
 
     while (!StopSearch) // while not stopping search
@@ -179,7 +197,7 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
                       { return x == 1; }))
       {
         StopSearch = true;
-        // ROS_INFO("STOP");
+        // ROS_INFO("STOP 1");
       }
       else
       {
@@ -198,12 +216,12 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
       // ROS_INFO("Random vector index = %i", RandomNormalIndex);
 
       VectorTried[RandomNormalIndex] = 1;
-
+      AmountOfVectorsUsed += 1;
       // see if all vectors are tried yet
 
       // choose vector
       std::vector<double> RandomNormal = NormalLines[RandomNormalIndex];
-      // std::cout << "Random vector = " << RandomNormal[0] << "\t" << RandomNormal[1] << "\t" << RandomNormal[2] << std::endl;
+      // std::cout << "Normal = " << RandomNormal[0] << "\t" << RandomNormal[1] << "\t" << RandomNormal[2] << std::endl;
 
       double sign_u = signum(OpticFlow[RandomNormalIndex].u); // source: google cpp signum
       double sign_v = signum(OpticFlow[RandomNormalIndex].v); // source: google cpp signum
@@ -235,9 +253,9 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
         double CramerD = RandomNormal[1];
         double CramerF = -RandomNormal[2];
 
-        // ROS_INFO("HL a %lf", HullLines[i][0]);
-        // ROS_INFO("HL b %lf", HullLines[i][1]);
-        // ROS_INFO("HL c %lf", HullLines[i][2]);
+        // ROS_INFO("Hull Line to evaluate:  a %lf, b ,%lf, c %lf", HullLines[i][0], HullLines[i][1], HullLines[i][2]);
+        //  ROS_INFO("HL b %lf", HullLines[i][1]);
+        //  ROS_INFO("HL c %lf", HullLines[i][2]);
 
         double DeterminantA = CramerA * CramerD - CramerB * CramerC;
 
@@ -267,9 +285,9 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
               double IntersectionCalculation = CurrentRule[0] * IntersectionX + CurrentRule[1] * IntersectionY + CurrentRule[2];
               // ROS_INFO("intersect1 = %lf", IntersectionCalculation);
 
-              if (IntersectionCalculation > 0.0)
+              if (IntersectionCalculation > FLT_EPSILON)
               {
-                // ROS_INFO("illegal");
+                // ROS_INFO("illegal 1 ");
                 Illegal = true;
                 IllegalCount += 1;
               }
@@ -280,9 +298,9 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
               double IntersectionCalculation = CurrentRule[0] * IntersectionX + CurrentRule[1] * IntersectionY + CurrentRule[2];
               // ROS_INFO("intersect2 = %lf", IntersectionCalculation);
 
-              if (IntersectionCalculation < 0.0)
+              if (IntersectionCalculation < -FLT_EPSILON)
               {
-                // ROS_INFO("illegal");
+                // ROS_INFO("illegal 2");
 
                 Illegal = true;
                 IllegalCount += 1;
@@ -312,10 +330,11 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
           if (HullRules.size() == IllegalCount)
           {
             StopCount += 1;
-
+            ROS_INFO("StopCount");
             if (StopCount == MaxFailures)
             {
               StopSearch = true;
+              // ROS_INFO("STOP 2");
             }
           }
 
@@ -344,7 +363,7 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
         if (((signum(CurrentRule[1]) == 1 && (CurrentRule[3]) == 1) || (signum(CurrentRule[1]) == -1 && (CurrentRule[3]) == -1) || (signum(CurrentRule[1]) == 0 && (CurrentRule[4]) == 1) || (signum(CurrentRule[0]) == 0 && (CurrentRule[3]) == 1)) && !Illegal)
         {
           double IntersectionCalculation = CurrentRule[0] * CurrentPointX + CurrentRule[1] * CurrentPointY + CurrentRule[2];
-          if (IntersectionCalculation > 0.0)
+          if (IntersectionCalculation > FLT_EPSILON)
           {
 
             PointsToRemove.push_back(i);
@@ -356,7 +375,7 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
         {
 
           double IntersectionCalculation = CurrentRule[0] * CurrentPointX + CurrentRule[1] * CurrentPointY + CurrentRule[2];
-          if (IntersectionCalculation < 0.0)
+          if (IntersectionCalculation < -FLT_EPSILON)
           {
 
             Illegal = true;
@@ -384,7 +403,7 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
 
         for (int l = 0; l < RuleCheckVector.size(); l++)
         {
-          if (RuleCheckVector[l] == 0)
+          if (abs(RuleCheckVector[l]) < FLT_EPSILON)
           {
             RuleCheckSum += 1;
           }
@@ -395,6 +414,7 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
           VectorInHull[HullRules[j][5]] = 0;
         }
       }
+      // remove lines and rules
 
       if (LinesToRemove.size() != HullRules.size())
       {
@@ -404,8 +424,24 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
           HullRules.erase(HullRules.begin() + LinesToRemove[i]);
         }
       }
+
+      // for reporting
+      // std::cout << "Current Hull Lines" << std::endl;
+      // std::cout << "Size: " << HullLines.size() << std::endl;
+
+      // for (int z = 0; z < HullLines.size(); z++)
+      // {
+      //   std::cout << " a " << HullLines[z][0] << " b " << HullLines[z][1] << " c " << HullLines[z][2] << std::endl;
+      // }
+
+      // std::cout << "Current Hull Points" << std::endl;
+      // std::cout << "Size: " << HullPoints.size() << std::endl;
+
+      // for (int z = 0; z < HullPoints.size(); z++)
+      // {
+      //   std::cout << " x " << HullPoints[z][0] << " y " << HullPoints[z][1] << std::endl;
+      // }
     }
-    // remove lines and rules
 
     // calculate score
     double IterationX = 0.0;
@@ -427,7 +463,7 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
       if ((signum(CurrentRule[1]) == 1 && (CurrentRule[3]) == 1) || (signum(CurrentRule[1]) == -1 && (CurrentRule[3]) == -1) || (signum(CurrentRule[1]) == 0 && (CurrentRule[4]) == 1) || (signum(CurrentRule[0]) == 0 && (CurrentRule[3]) == 1))
       {
         double IntersectionCalculation = CurrentRule[0] * IterationX + CurrentRule[1] * IterationY + CurrentRule[2];
-        if (IntersectionCalculation <= 0.0)
+        if (IntersectionCalculation < FLT_EPSILON)
         {
 
           InlierCount += 1;
@@ -436,7 +472,7 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
       else if ((signum(CurrentRule[1]) == -1 && (CurrentRule[3]) == 1) || (signum(CurrentRule[1]) == 1 && signum(CurrentRule[3]) == -1) || (signum(CurrentRule[1]) == 0 && (CurrentRule[4]) == -1) || (signum(CurrentRule[0]) == 0 && (CurrentRule[3]) == -1))
       {
         double IntersectionCalculation = CurrentRule[0] * IterationX + CurrentRule[1] * IterationY + CurrentRule[2];
-        if (IntersectionCalculation >= 0.0)
+        if (IntersectionCalculation > -FLT_EPSILON)
         {
           InlierCount += 1;
         }
@@ -445,15 +481,19 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
     // ROS_INFO("inlier score %i", InlierCount);
 
     IterationScore = InlierCount;
-    // ROS_INFO("it score %i", IterationScore);
-    //  ROS_INFO("max score %i", MaxScore);
 
-    if (IterationScore > MaxScore)
+    // ROS_INFO("it score %i", IterationScore);
+    //   ROS_INFO("max score %i", MaxScore);
+
+    if ((IterationScore > MaxScore) || ((IterationScore == MaxScore) && (AmountOfVectorsUsed > MaxUsed)))
     {
+      ROS_INFO("MaxUsed = %i, MaxScore = %i", MaxUsed, MaxScore);
       NewHull = true;
       MaxScore = IterationScore;
       BestHull = HullPoints;
       BestHullLines = HullLines;
+      MaxUsed = AmountOfVectorsUsed;
+      ROS_INFO("Found new hull with score %i using %i, in iteration %i", IterationScore, AmountOfVectorsUsed, n);
     }
   }
 
@@ -473,7 +513,7 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
 
     FOEX = FOEX / (double)BestHull.size();
     FOEY = FOEY / (double)BestHull.size();
-    
+
     if (FOEX != FOV_X / 2)
     {
       FoE_hist_x.push_back(FOEX);
@@ -510,7 +550,7 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
 
     int64_t current_time = OpticFlow[0].t;
 
-    FoE_rec_file << current_time << ", " << *FoE_x << ", " << *FoE_y << ", " << FOEX << ", " << FOEY << ", " << FoE_hist_x.size() << ", " << ArraySize << std::endl;
+    FoE_rec_file << current_time << ", " << *FoE_x << ", " << *FoE_y << ", " << FOEX << ", " << FOEY << ", " << FoE_hist_x.size() << ", " << ArraySize << ", " << MaxScore << ", " << MaxUsed << std::endl;
 
     for (int i = 0; i < BestHullLines.size(); i++)
     { // std::cout << "besthull" << current_time << "," << BestHullLines[i][0] << "," << BestHullLines[i][1] << "," << BestHullLines[i][2] << std::endl;
@@ -608,8 +648,10 @@ void log_OF(std::vector<FlowPacket> *myOF)
 {
   // Fill final_buffer with current OF vector and clear myOF for new OF from subscription.
   FlowPacket OFvec_buf;
+
   prepMutex.lock();
   for (std::vector<FlowPacket>::iterator it = myOF->begin(); it != myOF->end(); it++)
+
   {
     // double diff = last_ts - period_;
     // double currenttime = (*it).t;
@@ -633,7 +675,13 @@ int main(int argc, char **argv)
 {
 
   ros::init(argc, argv, "foe_estimator");
-  ros::NodeHandle n;
+
+  std::string folder;
+  ros::NodeHandle n("~");
+
+  n.getParam("folder", folder);
+
+  ROS_INFO_STREAM("folder name: " << folder);
 
   // Initialize subscribers and publishers
   ros::Subscriber sub = n.subscribe("/OpticFlow", 1, opticflowCallback);
@@ -642,19 +690,19 @@ int main(int argc, char **argv)
   std::string myDate = currentDateTime();
 
   std::string filename = "FoE_recording.txt";
-  FoE_rec_file.open(filename);
+  FoE_rec_file.open(folder + filename);
 
   std::string filename_flow = "FoE_flow_recording.txt";
 
-  FoE_flow_rec_file.open(filename_flow);
+  FoE_flow_rec_file.open(folder + filename_flow);
 
   std::string filename_HP = "HP_recording.txt";
 
-  HP_log_file.open(filename_HP);
+  HP_log_file.open(folder + filename_HP);
 
   std::string filename_HL = "HL_recording.txt";
 
-  HL_log_file.open(filename_HL);
+  HL_log_file.open(folder + filename_HL);
 
   ros::spin();
 

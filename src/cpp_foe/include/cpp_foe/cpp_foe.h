@@ -1,6 +1,6 @@
 /**
  * This file is part of the foe_estimator package - MAVLab TU Delft
- * 
+ *
  *   MIT License
  *
  *   Copyright (c) 2020 MAVLab TU Delft
@@ -22,7 +22,7 @@
  *   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  *   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  *   SOFTWARE.
- * 
+ *
  * */
 
 #ifndef CPP_FOE_H_
@@ -34,7 +34,6 @@
 #include <mutex>
 #include <numeric>
 
-
 #include "ros/ros.h"
 
 // ROS messages
@@ -45,7 +44,6 @@
 #include "cpp_foe/FoE.h"
 #include "std_msgs/Int16.h"
 
-
 // Required by FOE estimation
 #include <cstddef>
 #include <cstdlib>
@@ -54,7 +52,7 @@
 #include "signum.h"
 #include <random>
 
-
+#include <gflags/gflags.h>
 
 // Mutex to lock during looping through arrays
 std::mutex prepMutex;
@@ -63,19 +61,27 @@ std::mutex prepMutex;
 ros::Publisher FoE_pub;
 cpp_foe::FoE FoE_msg;
 
-std::vector<double> FoE_hist_x {};
-std::vector<double> FoE_hist_y {};
+std::vector<double> FoE_hist_x{};
+std::vector<double> FoE_hist_y{};
 double FoE_x;
 double FoE_y;
 
 int FOV_X = 240;
 int FOV_Y = 180;
 
-int min_vectors = 0;
+int min_vectors = 10;
 int num_average = 5;
+int AmountOfIterations = 100;
+int MaxFailures = 1;
+
+// Processing rate (Hz) for FoE estimation
+double rate_ = 1000;
+double period_ = 1.0 / rate_ * 1e9; // in nSec
+
 
 // Optic flow packet structure
-struct FlowPacket {
+struct FlowPacket
+{
     int x;
     int y;
     int t;
@@ -84,7 +90,6 @@ struct FlowPacket {
     double v;
     double ru;
     double rv;
-
 };
 
 // Optic Flow arrays for storing temp and final OF vectors
@@ -92,13 +97,10 @@ std::vector<FlowPacket> myOF;
 std::vector<FlowPacket> final_buffer;
 std::vector<FlowPacket> myOFBuf;
 
-// Initialize counters 
+// Initialize counters
 uint64_t last_ts = 0;
 double prev_time = 0.0;
 
-// Processing rate (Hz) for FoE estimation
-double rate_ = 1000;
-double period_ = 1.0 / rate_ *1e9; //in nSec
 
 // Logging function for incoming OF
 void log_OF(std::vector<FlowPacket> *myOF);
@@ -106,26 +108,22 @@ void log_OF(std::vector<FlowPacket> *myOF);
 // Array for storing OF (COLUMN MAJOR)
 static std::vector<FlowPacket> fillOpticFlowArray();
 
-void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double  *FoE_x, double *FoE_y);
+void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x, double *FoE_y);
 std::ofstream FoE_rec_file;
 std::ofstream FoE_flow_rec_file;
 std::ofstream HP_log_file;
 std::ofstream HL_log_file;
 
-
-
-
-
-inline const std::string currentDateTime(void) {
-    time_t     now = time(0);
-    struct tm  tstruct;
-    char       buf[80];
+inline const std::string currentDateTime(void)
+{
+    time_t now = time(0);
+    struct tm tstruct;
+    char buf[80];
     tstruct = *localtime(&now);
     // Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
     // for more information about date/time format
     strftime(buf, sizeof(buf), "%Y_%m_%d-%H_%M_%S", &tstruct);
     return buf;
 }
-
 
 #endif // CPP_FOE_H_

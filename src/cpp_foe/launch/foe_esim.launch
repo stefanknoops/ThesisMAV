@@ -1,12 +1,14 @@
 <launch>
   <!-- camera driver -->
-     <arg name="config" />
-
+    <arg name="config" default="cfg/forward_openGL_loop.conf"/>
+    <arg name="experiment"/>
   <!-- Event camera simulator -->
   <node name="esim_node" pkg="esim_ros" type="esim_node" args="
     --v=1
     --vmodule=data_provider_from_folder=10
     --flagfile=$(find esim_ros)/$(arg config)
+    --trajectory_csv_file=/home/stefan/myCatkin_ws/Experiments/$(arg experiment)/trajectory.csv
+    --path_to_output_bag=/home/stefan/myCatkin_ws/Experiments/$(arg experiment)/events.bag
     " output="screen"/>
 
   <include file="$(find esim_ros)/launch/visualization.launch" />
@@ -17,10 +19,16 @@
   <node name="dvs_of" pkg="dvs_of" type="dvs_of" output="screen">
       <remap from="/dvs/events" to="/cam0/events"/>
       <remap from="/dvs/imu" to="/imu"/>
+      <param name = "folder" value = "/home/stefan/myCatkin_ws/Experiments/$(arg experiment)/"/>
+
 
     </node>
 
 
-  <node name="cpp_foe" pkg="cpp_foe" type="cpp_foe" output="screen" />
+  <node name="cpp_foe" pkg="cpp_foe" type="cpp_foe">
+
+    <param name = "folder" value = "/home/stefan/myCatkin_ws/Experiments/$(arg experiment)/"/>
+
+  </node>
 
 </launch>

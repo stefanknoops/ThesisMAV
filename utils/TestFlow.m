@@ -1,4 +1,4 @@
-ExperimentName = 'Shaking2D_translation';
+ExperimentName = '6Dflight_1';
 
 
 filepath1 = append('../Experiments/',ExperimentName,'/trajectory.csv');
@@ -8,13 +8,14 @@ filepath3 = append('../Experiments/',ExperimentName,'/FoE_flow_recording.txt');
 filepath4 = append('../Experiments/',ExperimentName,'/HL_recording.txt');
 filepath5 = append('../Experiments/',ExperimentName,'/HP_recording.txt');
 
-M = csvread("../Experiments/"+ExperimentName+"/OF_LOGFILE_.txt");
+M = csvread("../Experiments/"+ExperimentName+"/OF_LOGFILE.txt");
+
 p = M(:,7);
 q = M(:,8);
 r = M(:,9);
 time = M(:,1);
 
-clear M
+%clear M
 
 figure(21)
 clf;
@@ -47,8 +48,11 @@ for i = 1:size(FoE,1)
     xlim([0,240])
     ylim([0,180])
     %axis equal
-    viscircles([FoE(i,2),FoE(i,3)],10);
-    viscircles([FoE(i,4),FoE(i,5)],5);
+    %viscircles([FoE(i,2),FoE(i,3)],10);
+    %viscircles([FoE(i,4),FoE(i,5)],5);
+    
+    scatter(FoE(i,4),FoE(i,5),2000,'Marker','+','MarkerEdgeColor','Red');
+    %scatter(FoE(i,4),FoE(i,5),'Marker','+','SizeData',100);
 
     %disp([FoE(i,2),FoE(i,3)])
     hold on
@@ -56,39 +60,40 @@ for i = 1:size(FoE,1)
     Indeces = (Flow(:,1) == FoE(i,1));
     CorrespondingFlow = Flow(Indeces,:);
     
-    scaling = 50;
+    scaling = 75;
 
     quiver(CorrespondingFlow(:,2),CorrespondingFlow(:,3),scaling*CorrespondingFlow(:,4),scaling*CorrespondingFlow(:,5),'Color','Red',"AutoScale","off")
-    quiver(CorrespondingFlow(:,2),CorrespondingFlow(:,3),scaling*CorrespondingFlow(:,6),scaling*CorrespondingFlow(:,7),'Color','Blue',"AutoScale","off")
+    %quiver(CorrespondingFlow(:,2),CorrespondingFlow(:,3),scaling*CorrespondingFlow(:,6),scaling*CorrespondingFlow(:,7),'Color','Blue',"AutoScale","off")
 
     
 
-    disp([CorrespondingFlow(:,4),CorrespondingFlow(:,5),CorrespondingFlow(:,6),CorrespondingFlow(:,7)])
+    %disp([CorrespondingFlow(:,4),CorrespondingFlow(:,5),CorrespondingFlow(:,6),CorrespondingFlow(:,7)])
     
     Indeces = (HP(:,1) == FoE(i,1));
    CorrespondingHP = HP(Indeces,:);
 
     %disp(flowindex)
-    viscircles([CorrespondingHP(:,2),CorrespondingHP(:,3)],3*ones(size(CorrespondingHP,1),1),'Color','Yellow');
+    viscircles([CorrespondingHP(:,2),CorrespondingHP(:,3)],3*ones(size(CorrespondingHP,1),1),'Color','Black');
     %disp([HP(HPindex,2),HP(HPindex,3)])
     
     
     Indeces = (HL(:,1) == FoE(i,1));
     
        CorrespondingHL = HL(Indeces,:);
-
+    
+       disp(CorrespondingHL(:,2:4));
     %disp(flowindex)
     y1 = -CorrespondingHL(:,4)./CorrespondingHL(:,3);
     y2 = -(CorrespondingHL(:,2).*240+CorrespondingHL(:,4))./CorrespondingHL(:,3);
-    line([0,240],[y1,y2],'LineStyle',':','LineWidth',1);
+    line([0,240],[y1,y2],'LineStyle',':','LineWidth',1,'Color','Black');
     
     
     axis equal
     set(gca, 'YDir','reverse')
-    xlim([0,240])
-    ylim([0,180])
+    xlim([-5,245])
+    ylim([-5,185])
     disp('new, i = '+string(i)+', size = '+string(size(CorrespondingFlow,1))+', time = '+string((FoE(i,1)-FoE(1,1))/10^6))
-    legend('Derotated','Not derotated');
+    legend('FoE estimation','Derotated vectors','Not derotated vectors');
 
     pause();
     

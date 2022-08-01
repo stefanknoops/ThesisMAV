@@ -1,10 +1,11 @@
-ExperimentName = 'Shaking2D_translation_3';
-close all
+ExperimentName = '6Dflight_1';
+
+
 filepath1 = append('../Experiments/',ExperimentName,'/trajectory.csv');
 filepath2 = append('../Experiments/',ExperimentName,'/FoE_recording.txt');
 filepath3 = append('../Experiments/',ExperimentName,'/Expected_FoE.csv');
 filepath4 = append('../Experiments/',ExperimentName,'/SimulatedPose.csv');
-filepath5 = append('../Experiments/',ExperimentName,'/OF_LOGFILE_.txt');
+filepath5 = append('../Experiments/',ExperimentName,'/OF_LOGFILE.txt');
 
 
 OF = csvread(filepath5,1);
@@ -64,44 +65,53 @@ err_y = EstimatedFoE(:,3) - TrueFoE(indexlookup,3);
 
 
 figure(1);
-subplot(3,1,1)
+subplot(2,1,1)
 hold off
 
 plot(EstimatedFoE(:,1),EstimatedFoE(:,2))
 hold on
-scatter(EstimatedFoE(:,1),EstimatedFoE(:,4),"Marker","+","SizeData",5)
-plot(TrueFoE(:,1),TrueFoE(:,2));
+scatter(EstimatedFoE(:,1),EstimatedFoE(:,4),"Marker",".","SizeData",3)
+plot(TrueFoE(:,1),TrueFoE(:,2),'Color','red');
 ylim([-FOV_X*1.05/2,FOV_X*1.05/2]*180/pi)
 yline([-FOV_X/2,FOV_X/2]*180/pi,'--')
 legend({'Estimated FoE_x','Current prediction','True FoE_x','Lower bound','Upper bound'},'Location','eastoutside')
 ylabel('FoE position [deg]') 
 xlabel('time [s]') 
+set(gca,'FontSize',12)
 
-subplot(3,1,2)
+subplot(2,1,2)
 hold off
 plot(EstimatedFoE(:,1),EstimatedFoE(:,3))
 hold on
-scatter(EstimatedFoE(:,1),EstimatedFoE(:,5),"Marker","+","SizeData",5)
-plot(TrueFoE(:,1),TrueFoE(:,3));
+scatter(EstimatedFoE(:,1),EstimatedFoE(:,5),"Marker",".","SizeData",3)
+plot(TrueFoE(:,1),TrueFoE(:,3),'Color','red');
 ylim([-FOV_Y*1.05/2,FOV_Y*1.05/2]*180/pi)
 yline([-FOV_Y/2,FOV_Y/2]*180/pi,'--')
 legend({'Estimated FoE_y','Current prediction','True FoE_y','Lower bound','Upper bound'},'Location','eastoutside')
 ylabel('FoE position [deg]') 
 xlabel('time [s]') 
+set(gca,'FontSize',12)
 
+set(gcf,'Position',[100 100 1200 600])
+filepath = append('../Experiments/',ExperimentName,'/',ExperimentName,'_FoEEstimation.pdf');
+exportgraphics(gcf,filepath,'ContentType','vector')
 
-subplot(3,1,3)
-plot(EstimatedFoE(:,1),EstimatedFoE(:,7))
+figure(6)
+subplot(2,1,1)
+plot(EstimatedFoE(:,1),EstimatedFoE(:,9)./EstimatedFoE(:,7))
 xlabel('time [s]')
-ylabel('#vectors');
+ylabel('#vectors used/#vectors');
+ylim([0,1])
 
-legend({'Amount of used vectors'},'Location','eastoutside')
+subplot(2,1,2)
+plot(EstimatedFoE(:,1),EstimatedFoE(:,8)./EstimatedFoE(:,7))
+xlabel('time [s]')
+ylabel('score/#vectors');
+ylim([0,1])
 
 
-set(gcf,'Position',[100 100 560 800])
 
-filepath = append('../Experiments/',ExperimentName,'/FoE_validation.png');
-saveas(gcf,filepath)
+
 
 figure(2)
 subplot(2,1,1)
@@ -121,22 +131,27 @@ legend('\phi_{sim}','\theta_{sim}','\psi_{sim}','\phi_{planned}','\theta_{planne
 hold off 
 
 figure(3)
-subplot(2,2,1)
-plot(EstimatedFoE(:,1),err_x)
-yline(mean(err_x),'--')
-subplot(2,2,3)
-plot(EstimatedFoE(:,1),err_y)
-yline(mean(err_y),'--')
-
-subplot(2,2,2)
+subplot(2,1,1)
 histogram(err_x,30);
-subplot(2,2,4);
+xlabel('\epsilon_x')
+set(gca,'FontSize',12)
+ylabel('n')
+
+subplot(2,1,2);
 histogram(err_y,30);
+set(gca,'FontSize',12)
+xlabel('\epsilon_y')
+ylabel('n')
+
+filepath = append('../Experiments/',ExperimentName,'/',ExperimentName,'_EstimationError.pdf');
+exportgraphics(gcf,filepath,'ContentType','vector')
 
 disp("Mean absolute error x: "+string(mean(abs(err_x)))+". Standard deviation error: "+string(std(err_x)))
 disp("Mean absolute error y: "+string(mean(abs(err_y)))+". Standard deviation error: "+string(std(err_y)))
-disp("Median amount of flow vectors: "+string(median(EstimatedFoE(:,7))))
+disp("Median amount of flow vectors: "+string(mean(EstimatedFoE(:,7))))
 disp("Average frequency: "+ string(size(EstimatedFoE(:,1),1)/max(EstimatedFoE(:,1))))
+
+disp(string(" & "+mean(abs(err_x))) +" & "+ string(std(err_x)) +" & "+string(mean(abs(err_y))) +" & "+string(std(err_y)) )
 
 figure(4)
 smoothfreq = smooth(EstimatedFoE(2:end,1),1./diff(EstimatedFoE(:,1)),30);

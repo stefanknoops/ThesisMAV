@@ -1,4 +1,4 @@
-M = csvread("../Experiments/Yawing/OF_LOGFILE_.txt");
+M = csvread("../Experiments/Yaw/OF_LOGFILE.txt");
 
 time = M(:,1);
 x= M(:,2);
@@ -20,6 +20,7 @@ norm_y = (y-90)/90;
 
 mag_of = sqrt((unpro_u).^2 + (unpro_v).^2);
 mag_rot = sqrt((rot_u).^2 + (rot_v).^2);
+mag_derot = sqrt((mean(derot_u)).^2 + (mean(derot_v)).^2);
 
 figure(2)
 
@@ -33,6 +34,8 @@ scatter(norm_y,[mag_rot,mag_of]);
 legend('Magnitude rotation','Magnitude optic flow')
 xlabel('Normalized y coordinate')
 ylabel('Vector magnitude')
+
+disp([mean(mag_of),std(mag_of),mean(mag_derot),std(mag_derot)])
     
 for i=1:100:size(time,1)
     figure(1)
@@ -45,7 +48,7 @@ for i=1:100:size(time,1)
     ylim([0,180])
         set(gca, 'YDir','reverse')
   
-    scaling = 30;
+    scaling = 40;
     quiver(x(i:i+99),y(i:i+99),scaling*unpro_u(i:i+99),scaling*unpro_v(i:i+99),"Color","Black","AutoScale","off");
     quiver(x(i:i+99),y(i:i+99),scaling*rot_u(i:i+99),scaling*rot_v(i:i+99),"Color","Red","AutoScale","off")
 

@@ -4,7 +4,7 @@ clear variables;
 close all;
 
 
-frequency = 500;
+frequency = 100;
 dt = 10^9/frequency; %in ns
 time = 10;
 n_timesteps = time*10^9/dt;
@@ -14,7 +14,7 @@ z_end = -20;
 FOV_X = 61.7164;
 FOV_Y = 48.2168;
 
-filename = 'Shaking2D_translation_2';
+filename = '6Dflight_4';
 
 traj = zeros(n_timesteps,8);
 
@@ -30,16 +30,34 @@ ttime = t_sim.';
 y = linspace(z_start,z_end,n_timesteps).';
 
 
-x = 0.6*sin(0.5*ttime)    +0.2*sin(1*ttime)   -0.1*sin(2*ttime)   +0.05*cos(3*ttime);
-z = 0.3*sin(0.5*ttime)    +0.3*sin(1*ttime)   -0.1*cos(2*ttime)   -0.05*sin(3*ttime);
 
-roll = zeros(n_timesteps,1);%0.3*sin(ttime); %0.8*sin(ttime); %sin(3*ttime)./10.*(sin(0.5*ttime)+1*cos(2*ttime)-0.3*sin(ttime));
-yaw = zeros(n_timesteps,1); %pi/2*sin(2*ttime); %
-pitch = zeros(n_timesteps,1); %ones(n_timesteps,1)*15*pi/180; %zeros(n_timesteps,1); %cos(3*ttime)./10.*(sin(ttime)+0.5*cos(0.5*ttime)+0.05*sin(2*ttime));
+
+
+x = 0.2*sin(0.5*ttime)    -0.7*cos(1*ttime)   +0.2*sin(2*ttime)   -0.05*cos(3*ttime);
+z = 0.1*sin(0.5*ttime)    -0.1*sin(1*ttime)   -0.1*sin(2*ttime)   +0.1*sin(3*ttime);
+
+roll =  randi(*sin(ttime) - 5*sin(2*ttime); %0.8*sin(ttime); %sin(3*ttime)./10.*(sin(0.5*ttime)+1*cos(2*ttime)-0.3*sin(ttime));
+yaw =   15*sin(1*ttime) - 5*cos(2*ttime);%zeros(n_timesteps,1); %pi/2*sin(2*ttime); %
+pitch = 4*cos(1*ttime) - 3*cos(2*ttime);%zeros(n_timesteps,1); %ones(n_timesteps,1)*15*pi/180; %zeros(n_timesteps,1); %cos(3*ttime)./10.*(sin(ttime)+0.5*cos(0.5*ttime)+0.05*sin(2*ttime));
 
 
 z = z+ 2.5*ones(n_timesteps,1);
 %% 
+
+roll = roll.*pi/180;
+pitch = pitch.*pi/180;
+yaw = yaw.*pi/180;
+
+quat = eul2quat([yaw,roll,pitch]);
+
+
+[SimulatedFoE_X, SimulatedFoE_Y,vx,vz,vy] = ForwardOptiTrackFoE(t_sim,x,y,z,quat(:,1),quat(:,2),quat(:,3),quat(:,4));
+
+if any(abs(SimulatedFoE_X) > FOV_X/2) || any(abs(SimulatedFoE_Y) > FOV_Y/2)
+    disp("********************************************************************************************************")
+    disp("***************************************WARNING: FOE OUT OF BOUNDS***************************************")
+    disp("********************************************************************************************************")
+end
 
 
 vx_world = diff(x)/dt*10^9;
@@ -50,33 +68,9 @@ vz_world = diff(z)/dt*10^9;
 traj(:,2:4) = [x,y,z];
 
 
-
-%%%EXAMPLES
-% sin(ttime)
-% linspace(z_start,z_end,n_timesteps).'
-% sin(ttime)+cos(2*ttime)/3
-
-% FUNCTIONS FOR RANDOM TRAJECTORIES. 
-%b = 0.01;
-%x = cumsum(smooth( -b + (b+b)*rand(1,n_timesteps),500));
-%y = cumsum(smooth( -b + (b+b)*rand(1,n_timesteps),500));
-
-
-roll = roll.*pi/180;
-pitch = pitch.*pi/180;
-yaw = yaw.*pi/180;
-
-quat = eul2quat([yaw,roll,pitch]);
-
-
 traj(:,5:8) = [quat(:,2),quat(:,3),quat(:,4),quat(:,1)];
 
 
-[SimulatedFoE_X, SimulatedFoE_Y,vx,vz,vy] = ForwardOptiTrackFoE(t_sim,x,y,z,quat(:,1),quat(:,2),quat(:,3),quat(:,4));
-
-if any(abs(SimulatedFoE_X) > FOV_X/2) || any(abs(SimulatedFoE_Y) > FOV_Y/2)
-    error("FOE OUT OF BOUNDS")
-end
 
 delay = 1; %s
 

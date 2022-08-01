@@ -87,7 +87,6 @@ namespace dvs_of
         int32_t getLength();
         void resetMedianFilters();
 
-
         // ON-Line processing of the incoming data
         void log_rates(std::vector<IMU> *myIMU);
         rates_t find_closest_rate(int64_t ts);
@@ -152,9 +151,9 @@ namespace dvs_of
         double ang_OF;
         rates_t rates;
 
-      
-
         int32_t FoE_x;
+
+        std::ofstream EventsFlow;
     };
 
     class Server

@@ -33,6 +33,9 @@ int main(int argc, char* argv[])
 
   ros::NodeHandle nh;
   ros::NodeHandle nh_private("~");
+  
+ 
+
 
   dvs_of::Server server(nh, nh_private);
 

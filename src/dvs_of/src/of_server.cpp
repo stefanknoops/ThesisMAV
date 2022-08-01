@@ -242,7 +242,7 @@ namespace dvs_of
                 zero_rates.q /= init_counter;
                 zero_rates.r /= init_counter;
                 initialized = true;
-                //ROS_INFO("Zero rates: %f %f %f", zero_rates.p, zero_rates.q, zero_rates.r);
+                ROS_INFO("Zero rates: %f %f %f", zero_rates.p, zero_rates.q, zero_rates.r);
             }
             //ROS_INFO("11");
         }
@@ -347,8 +347,7 @@ namespace dvs_of
      */
     void OpticFlow::storeEventsFlow(double d_u, double d_v, double mag, rates_t rates, double rot_u, double rot_v, double chck)
     {
-        std::ofstream EventsFlow;
-        EventsFlow.open(this->FileName, std::ofstream::app);
+
         if (!EventsFlow.is_open())
         {
             std::cout << "Unable to open output file: " << this->FileName << std::endl;
@@ -358,13 +357,14 @@ namespace dvs_of
         {
             EventsFlow << this->myFlowPacket.t << "," << this->myFlowPacket.x << "," << this->myFlowPacket.y << "," << this->myFlowPacket.p << ",";
             EventsFlow << this->myFlowPacket.u << "," << this->myFlowPacket.v << "," << rates.p << "," << rates.q << "," << rates.r << "," << d_u << "," << d_v << "," << rot_u << "," << rot_v << "," << rates.ts << std::endl;
-            EventsFlow.close();
         }
     }
 
     void OpticFlow::setLogFileName(std::string filename)
     {
         this->FileName = filename;
+        //std::ofstream EventsFlow;
+        EventsFlow.open(this->FileName);
     }
 
     /**
@@ -420,6 +420,8 @@ namespace dvs_of
     OpticFlow::~OpticFlow()
     {
         freeFlowStateMem(&this->myFlowState);
+        EventsFlow.close();
+
     }
 
     void OpticFlow::checkVectorDirection(FlowPacket flow)
@@ -633,14 +635,21 @@ namespace dvs_of
 
         CountPublish = nh_.advertise<dvs_of_msg::VectorCount>("/CountVec", 1);
 
+        std::string folder;
+
+        if (nh_private.getParam("folder",folder)){
+            ROS_INFO("Success in DVS_OF");
+        };
+
+
         // data record
         std::string myDate = currentDateTime();
-        std::string ID1("DVS_recording_");
-        std::string ID2("IMU_recording_");
-        std::string ID3("OF_LOGFILE_");
-        std::string filename1 = ID1 + ".txt";
-        std::string filename2 = ID2 + ".txt";
-        std::string filename3 = ID3 + ".txt";
+        std::string ID1("DVS_recording");
+        std::string ID2("IMU_recording");
+        std::string ID3("OF_LOGFILE");
+        std::string filename1 = folder + ID1 + ".txt";
+        std::string filename2 = folder + ID2 + ".txt";
+        std::string filename3 = folder + ID3 + ".txt";
         DVS_rec_file.open(filename1);
         IMU_rec_file.open(filename2);
 
@@ -652,6 +661,7 @@ namespace dvs_of
     {
         DVS_rec_file.close();
         IMU_rec_file.close();
+
         myOpticFlow->~OpticFlow();
     }
 
