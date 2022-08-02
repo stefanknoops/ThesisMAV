@@ -641,6 +641,10 @@ namespace dvs_of
             ROS_INFO("Success in DVS_OF");
         };
 
+        if (nh_private.getParam("calib",calib)){
+            ROS_INFO("calibration file: %s",calib.c_str());
+        };
+
 
         // data record
         std::string myDate = currentDateTime();

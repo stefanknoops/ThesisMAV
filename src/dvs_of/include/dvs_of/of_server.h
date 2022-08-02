@@ -173,6 +173,9 @@ namespace dvs_of
         void foeCallback(const std_msgs::Int32::ConstPtr &msg);
         ros::Publisher CountPublish;
 
+                std::string calib;
+
+
     private:
         ros::NodeHandle nh_;
         // Getting the Events

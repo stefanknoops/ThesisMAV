@@ -2,6 +2,9 @@
   <!-- camera driver -->
     <arg name="config" default="cfg/forward_openGL_loop.conf"/>
     <arg name="experiment"/>
+    <arg name="calibration" default="simulator"/>
+
+
   <!-- Event camera simulator -->
   <node name="esim_node" pkg="esim_ros" type="esim_node" args="
     --v=1
@@ -20,6 +23,7 @@
       <remap from="/dvs/events" to="/cam0/events"/>
       <remap from="/dvs/imu" to="/imu"/>
       <param name = "folder" value = "/home/stefan/myCatkin_ws/Experiments/$(arg experiment)/"/>
+      <param name = "calib" value = "$(arg calibration)"/>
 
 
     </node>

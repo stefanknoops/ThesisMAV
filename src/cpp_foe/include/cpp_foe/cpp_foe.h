@@ -52,8 +52,6 @@
 #include "signum.h"
 #include <random>
 
-#include <gflags/gflags.h>
-
 // Mutex to lock during looping through arrays
 std::mutex prepMutex;
 
