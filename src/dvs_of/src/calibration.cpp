@@ -1,6 +1,6 @@
 /**
  * This file is part of the odroid_ros_dvs package - MAVLab TU Delft
- * 
+ *
  *   MIT License
  *
  *   Copyright (c) 2020 MAVLab TU Delft
@@ -22,42 +22,56 @@
  *   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  *   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  *   SOFTWARE.
- * 
+ *
  * */
 
 #include <dvs_of/calibration.h>
 
+namespace dvs_of
+{
 
-namespace dvs_of {
+    void initializeUmap(std::string calib)
+    {
+        if (calib.c_str() == "cam_222")
+        {
+            ROS_INFO("Setting calibration to %s", calib.c_str());
 
-    void initializeUmap(std::string calib) {
-        if (calib.c_str() == "cam_222") {
             undistortionMapX = undistortionMapX_222;
             undistortionMapY = undistortionMapY_222;
         }
-        else {
-           undistortionMapX = undistortionMapX_sim;
-           undistortionMapY = undistortionMapY_sim;
+        else
+        {
+            ROS_INFO("Setting calibration to simulation distortion map");
+
+            undistortionMapX = undistortionMapX_sim;
+            undistortionMapY = undistortionMapY_sim;
         }
 
         ROS_INFO("Calibration map successfully set");
     }
 
-    float dvsGetUndistortedPixelX(uint16_t x, uint16_t y){
-        if (x < DVS_N_PIXELS_X && y < DVS_N_PIXELS_Y) {
+    float dvsGetUndistortedPixelX(uint16_t x, uint16_t y)
+    {
+        if (x < DVS_N_PIXELS_X && y < DVS_N_PIXELS_Y)
+        {
             return undistortionMapX[x][y];
-        } else {
+        }
+        else
+        {
             return 0.f;
         }
     }
 
-    float dvsGetUndistortedPixelY(uint16_t x, uint16_t y){
-        if (x < DVS_N_PIXELS_X && y < DVS_N_PIXELS_Y) {
+    float dvsGetUndistortedPixelY(uint16_t x, uint16_t y)
+    {
+        if (x < DVS_N_PIXELS_X && y < DVS_N_PIXELS_Y)
+        {
             return undistortionMapY[x][y];
-        } else {
+        }
+        else
+        {
             return 0.f;
         }
     }
 
-} // namespace 
-
+} // namespace
