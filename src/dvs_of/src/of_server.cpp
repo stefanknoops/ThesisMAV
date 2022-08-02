@@ -29,7 +29,7 @@
 
 namespace dvs_of
 {
-
+    
     dvs_of_msg::FlowPacketMsgArray PacketPub_;
     dvs_of_msg::VectorCount countpackage;
 
@@ -645,6 +645,7 @@ namespace dvs_of
             ROS_INFO("calibration file: %s",calib.c_str());
         };
 
+        initializeUmap(calib);
 
         // data record
         std::string myDate = currentDateTime();

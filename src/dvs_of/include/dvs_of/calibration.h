@@ -27,9 +27,15 @@
 
 #ifndef CALIBRATION_H_
 #define CALIBRATION_H_
+#include <string>
 
 #include <cinttypes>
-#include "dvs_of/calibDVS240.h"
+
+#include <ros/ros.h>
+#include "dvs_of/calibDVS240_sim.h"
+#include "dvs_of/calibDVS240_222.h"
+#define DVS_N_PIXELS_X 240
+#define DVS_N_PIXELS_Y 180
 
 namespace dvs_of {
 
@@ -50,11 +56,17 @@ namespace dvs_of {
      * Includes bounds checking for input X- and Y- addresses.
      *
      * @param x X-address of pixel
-     * @param y Y-address of pixel
+     * @param y Y-address of pixel 
      * @return Undistorted pixel location
      */
     float dvsGetUndistortedPixelY(uint16_t x, uint16_t y);
 
+    static std::vector<std::vector<float>> undistortionMapX;
+    static std::vector<std::vector<float>> undistortionMapY;
+    void initializeUmap(std::string calib);
+
+    //float undistortionMapX[DVS_N_PIXELS_X][DVS_N_PIXELS_Y];
+    //float undistortionMapY[DVS_N_PIXELS_X][DVS_N_PIXELS_Y];
 } // namespace
 
 #endif // CALIBRATION_H_

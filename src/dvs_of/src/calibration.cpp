@@ -27,7 +27,21 @@
 
 #include <dvs_of/calibration.h>
 
+
 namespace dvs_of {
+
+    void initializeUmap(std::string calib) {
+        if (calib.c_str() == "cam_222") {
+            undistortionMapX = undistortionMapX_222;
+            undistortionMapY = undistortionMapY_222;
+        }
+        else {
+           undistortionMapX = undistortionMapX_sim;
+           undistortionMapY = undistortionMapY_sim;
+        }
+
+        ROS_INFO("Calibration map successfully set");
+    }
 
     float dvsGetUndistortedPixelX(uint16_t x, uint16_t y){
         if (x < DVS_N_PIXELS_X && y < DVS_N_PIXELS_Y) {
