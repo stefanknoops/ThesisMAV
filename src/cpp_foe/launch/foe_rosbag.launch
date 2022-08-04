@@ -1,14 +1,22 @@
 <launch>
   <!-- camera driver -->
 
+  <arg name="experiment" />
+  <arg name="calibration" default="cam_216" />
 
 
-  <!-- visualization -->
-  <node name="dvs_of" pkg="dvs_of" type="dvs_of">
-      <remap from="/dvs/events" to="/cam0/events"/>
-    </node>
+  <node name="dvs_of" pkg="dvs_of" type="dvs_of" output="screen">
+    <param name="folder" value="/home/stefan/myCatkin_ws/Experiments/ODA/$(arg experiment)/" />
+    <param name="calib" value="$(arg calibration)" />
+  </node>
 
 
-  <node name="cpp_foe" pkg="cpp_foe" type="cpp_foe"/>
+  <node name="cpp_foe" pkg="cpp_foe" type="cpp_foe">
+
+    <param name="folder" value="/home/stefan/myCatkin_ws/Experiments/ODA/$(arg experiment)/" />
+
+  </node>
+
+  <node pkg="rosbag" type="play" name="player" output="screen" args="-d 3 /home/stefan/Documents/oda/ODA_Dataset/dataset/$(arg experiment)/$(arg experiment).bag"/>
 
 </launch>

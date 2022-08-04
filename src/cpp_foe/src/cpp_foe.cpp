@@ -670,6 +670,20 @@ void log_OF(std::vector<FlowPacket> *myOF)
   myOF->clear();
 }
 
+
+void optitrackCallback(const geometry_msgs::PoseStamped::ConstPtr &msg) // gets the optic flow from the
+{
+  
+
+
+  OT_log_file << msg->header.stamp << ", " << msg->pose.position.x <<", "<< msg->pose.position.x << ", " << msg->pose.position.x << ", ";
+  OT_log_file << msg->pose.orientation.x <<", "<< msg->pose.orientation.y << ", " << msg->pose.orientation.z << ", " << msg->pose.orientation.w;
+
+  OT_log_file << std::endl;
+
+ 
+}
+
 int main(int argc, char **argv)
 {
 
@@ -684,28 +698,26 @@ int main(int argc, char **argv)
 
   // Initialize subscribers and publishers
   ros::Subscriber sub = n.subscribe("/OpticFlow", 1, opticflowCallback);
+  ros::Subscriber sub2 = n.subscribe("/optitrack/pose", 1, optitrackCallback);
+
   FoE_pub = n.advertise<cpp_foe::FoE>("/FoE", 1);
 
-  std::string myDate = currentDateTime();
 
+  std::string myDate = currentDateTime();
   std::string filename = "FoE_recording.txt";
   FoE_rec_file.open(folder + filename);
-
   std::string filename_flow = "FoE_flow_recording.txt";
-
   FoE_flow_rec_file.open(folder + filename_flow);
-
   std::string filename_HP = "HP_recording.txt";
-
   HP_log_file.open(folder + filename_HP);
-
   std::string filename_HL = "HL_recording.txt";
-
   HL_log_file.open(folder + filename_HL);
-
+  std::string filename_OT = "Optitrack_recording.txt";
+  OT_log_file.open(folder + filename_OT);
   timelog.open("timing.txt");
 
   ros::spin();
 
   return 0;
 }
+

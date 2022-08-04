@@ -1,8 +1,8 @@
 <launch>
   <!-- camera driver -->
-    <arg name="config" default="cfg/forward_openGL_loop.conf"/>
-    <arg name="experiment"/>
-    <arg name="calibration" default="simulator"/>
+  <arg name="config" default="cfg/forward_openGL_loop.conf" />
+  <arg name="experiment" />
+  <arg name="calibration" default="simulator" />
 
 
   <!-- Event camera simulator -->
@@ -12,26 +12,25 @@
     --flagfile=$(find esim_ros)/$(arg config)
     --trajectory_csv_file=/home/stefan/myCatkin_ws/Experiments/$(arg experiment)/trajectory.csv
     --path_to_output_bag=/home/stefan/myCatkin_ws/Experiments/$(arg experiment)/events.bag
-    " output="screen"/>
+    " output="screen" />
 
   <include file="$(find esim_ros)/launch/visualization.launch" />
 
 
-
   <!-- visualization -->
   <node name="dvs_of" pkg="dvs_of" type="dvs_of" output="screen">
-      <remap from="/dvs/events" to="/cam0/events"/>
-      <remap from="/dvs/imu" to="/imu"/>
-      <param name = "folder" value = "/home/stefan/myCatkin_ws/Experiments/$(arg experiment)/"/>
-      <param name = "calib" value = "$(arg calibration)"/>
+    <remap from="/dvs/events" to="/cam0/events" />
+    <remap from="/dvs/imu" to="/imu" />
+    <param name="folder" value="/home/stefan/myCatkin_ws/Experiments/$(arg experiment)/" />
+    <param name="calib" value="$(arg calibration)" />
 
 
-    </node>
+  </node>
 
 
   <node name="cpp_foe" pkg="cpp_foe" type="cpp_foe">
 
-    <param name = "folder" value = "/home/stefan/myCatkin_ws/Experiments/$(arg experiment)/"/>
+    <param name="folder" value="/home/stefan/myCatkin_ws/Experiments/$(arg experiment)/" />
 
   </node>
 

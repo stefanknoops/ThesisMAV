@@ -1,27 +1,27 @@
 <launch>
   <!-- camera driver -->
 
-    <arg name="experiment" default = "unspecified"/>
-    <arg name="calibration" default="cam_222"/>
+  <arg name="experiment" default="unspecified" />
+  <arg name="calibration" default="cam_222" />
 
 
-  <node name="davis_ros_driver" pkg="davis_ros_driver" type="davis_ros_driver" output="screen" >
-        <remap from="camera_info" to="/dvs/camera_info"/>
-        <remap from="imu" to="/dvs/imu"/>
+  <node name="davis_ros_driver" pkg="davis_ros_driver" type="davis_ros_driver" output="screen">
+    <remap from="camera_info" to="/dvs/camera_info" />
+    <remap from="imu" to="/dvs/imu" />
   </node>
 
   <!-- visualization -->
-   <node name="dvs_of" pkg="dvs_of" type="dvs_of" output="screen">
-      <param name = "folder" value = "/home/mavlab/ThesisMAV/Experiments/$(arg experiment)/"/>
-      <param name = "calib" value = "$(arg calibration)"/>
+  <node name="dvs_of" pkg="dvs_of" type="dvs_of" output="screen">
+    <param name="folder" value="/home/mavlab/ThesisMAV/Experiments/$(arg experiment)/" />
+    <param name="calib" value="$(arg calibration)" />
 
 
-    </node>
+  </node>
 
 
   <node name="cpp_foe" pkg="cpp_foe" type="cpp_foe">
 
-    <param name = "folder" value = "/home/mavlab/ThesisMAV/Experiments/$(arg experiment)/"/>
+    <param name="folder" value="/home/mavlab/ThesisMAV/Experiments/$(arg experiment)/" />
 
   </node>
 

@@ -41,6 +41,7 @@
 #include "dvs_of_msg/FlowPacketMsgArray.h"
 #include "std_msgs/Int64.h"
 #include "std_msgs/Int64MultiArray.h"
+#include "geometry_msgs/PoseStamped.h"
 #include "cpp_foe/FoE.h"
 #include "std_msgs/Int16.h"
 
@@ -109,7 +110,10 @@ std::ofstream FoE_rec_file;
 std::ofstream FoE_flow_rec_file;
 std::ofstream HP_log_file;
 std::ofstream HL_log_file;
+std::ofstream OT_log_file;
+
 std::ofstream timelog;
+
 
 inline const std::string currentDateTime(void)
 {
@@ -122,5 +126,8 @@ inline const std::string currentDateTime(void)
     strftime(buf, sizeof(buf), "%Y_%m_%d-%H_%M_%S", &tstruct);
     return buf;
 }
+
+void optitrackCallback(const geometry_msgs::PoseStamped::ConstPtr &msg); // gets the optic flow from the
+
 
 #endif // CPP_FOE_H_
