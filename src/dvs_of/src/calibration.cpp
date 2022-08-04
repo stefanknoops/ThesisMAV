@@ -32,7 +32,7 @@ namespace dvs_of
 
     void initializeUmap(std::string calib)
     {
-        if (calib.c_str() == "cam_222")
+        if (calib == "cam_222")
         {
             ROS_INFO("Setting calibration to %s", calib.c_str());
 
