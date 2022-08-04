@@ -29,7 +29,7 @@
 
 namespace dvs_of
 {
-    
+
     dvs_of_msg::FlowPacketMsgArray PacketPub_;
     dvs_of_msg::VectorCount countpackage;
 
@@ -130,7 +130,7 @@ namespace dvs_of
         this->period_ = 1e6 / rate;
         this->length_ = (int32_t)(time_window * rate);
         this->buffer_ = (rates_t *)std::calloc(this->length_, sizeof(rates_t));
-        //std::cout << "\t ... On-line processing set at: " << BoolToString(ON_OFF_PROC) << std::endl;
+        // std::cout << "\t ... On-line processing set at: " << BoolToString(ON_OFF_PROC) << std::endl;
         ROS_INFO_STREAM(" ... On-line processing set at: " << BoolToString(ON_OFF_PROC));
     }
 
@@ -165,12 +165,12 @@ namespace dvs_of
 
     void RateBuffer::log_rates(std::vector<IMU> *myIMU)
     {
+
         static bool initialized = false;
         static int init_counter = 0;
         static rates_t zero_rates = {0.f, 0.f, 0.f, 0};
         static int64_t last_ts = 0;
 
-        //ROS_INFO("1");
         // Pass gyro through median filter to remove outliers
         // std::cout << "\n\t ... Filtering IMU." << std::endl;
         // ROS_INFO_STREAM(" ... Filtering IMU.");
@@ -180,7 +180,6 @@ namespace dvs_of
         uint64_t tf;
         for (; it != myIMU->end(); it++)
         { // DEPENDS ON COORDINATE SYSTEM, IN THIS CASE:
-            //ROS_INFO("2");
 
             // TODO: ADD SWITCH
 
@@ -194,57 +193,66 @@ namespace dvs_of
             this->q_filt.update((*it).gyr_z); // yaw
             this->r_filt.update((*it).gyr_y); // roll
             if ((*it).t >= last_ts + this->period_ && initialized)
-                //ROS_INFO("3");
+            {
+
+                this->rates_mutex.lock();
+                last_ts = (*it).t;
+                /*
+                //("buffer idx input %i",this->buffer_idx_);
+
+                this->buffer_[this->buffer_idx_].p = this->p_filt.get_median() - zero_rates.p;
+                this->buffer_[this->buffer_idx_].q = this->q_filt.get_median() - zero_rates.q;
+                this->buffer_[this->buffer_idx_].r = this->r_filt.get_median() - zero_rates.r;
+                this->buffer_[this->buffer_idx_].ts = last_ts;
+                this->buffer_idx_ = (this->buffer_idx_ + 1) % this->length_;
+                */
+                rates_t newRates;
+                newRates.p = this->p_filt.get_median() - zero_rates.p;
+                newRates.q = this->q_filt.get_median() - zero_rates.q;
+                newRates.r = this->r_filt.get_median() - zero_rates.r;
+                newRates.ts = last_ts;
+                NewBuffer.push_back(newRates);
+                if (NewBuffer.size() > 5)
                 {
-                    this->rates_mutex.lock();
-                    last_ts = (*it).t;
-                    //ROS_INFO("4");
-                    /*
-                    //("buffer idx input %i",this->buffer_idx_);
-
-                    this->buffer_[this->buffer_idx_].p = this->p_filt.get_median() - zero_rates.p;
-                    this->buffer_[this->buffer_idx_].q = this->q_filt.get_median() - zero_rates.q;
-                    this->buffer_[this->buffer_idx_].r = this->r_filt.get_median() - zero_rates.r;
-                    this->buffer_[this->buffer_idx_].ts = last_ts;
-                    this->buffer_idx_ = (this->buffer_idx_ + 1) % this->length_;
-                    */
-                    rates_t newRates;
-                    //ROS_INFO("5");
-                    newRates.p = this->p_filt.get_median() - zero_rates.p;
-                    newRates.q = this->q_filt.get_median() - zero_rates.q;
-                    newRates.r = this->r_filt.get_median() - zero_rates.r;
-                    newRates.ts = last_ts;
-                    NewBuffer.push_back(newRates);
-                    //ROS_INFO("6");
-                    if (NewBuffer.size() > 5)
-                    {
-                        //ROS_INFO("7");
-                        NewBuffer.erase(NewBuffer.begin());
-                    }
-
-                    this->rates_mutex.unlock();
+                    NewBuffer.erase(NewBuffer.begin());
                 }
+
+                this->rates_mutex.unlock();
+            }
+            else if ((*it).t >= last_ts + this->period_)
+            { // provide unfiltered value for now, big TODO to fix
+                rates_t newRates;
+
+                newRates.p = (*it).gyr_x;
+                newRates.q = (*it).gyr_z;
+                newRates.r = (*it).gyr_y;
+
+                NewBuffer.push_back(newRates);
+                if (NewBuffer.size() > 5)
+                {
+                    NewBuffer.erase(NewBuffer.begin());
+                }
+
+                this->rates_mutex.unlock();
+            }
         }
 
         // Get average zero reading
         if (!initialized)
         {
-            //ROS_INFO("8");
             init_counter++;
             zero_rates.p += this->p_filt.get_median();
             zero_rates.q += this->q_filt.get_median();
             zero_rates.r += this->r_filt.get_median();
-            //ROS_INFO("9");
-            if (init_counter >= 500) //>= 200)
-            {           
-                //ROS_INFO("10");             // ~ 0.5s of measurement @ 1000 Hz (was 1.5 in reality)
+            if (init_counter >= 100) //>= 200)
+            {
+
                 zero_rates.p /= init_counter;
                 zero_rates.q /= init_counter;
                 zero_rates.r /= init_counter;
                 initialized = true;
                 ROS_INFO("Zero rates: %f %f %f", zero_rates.p, zero_rates.q, zero_rates.r);
             }
-            //ROS_INFO("11");
         }
     }
 
@@ -363,7 +371,7 @@ namespace dvs_of
     void OpticFlow::setLogFileName(std::string filename)
     {
         this->FileName = filename;
-        //std::ofstream EventsFlow;
+        // std::ofstream EventsFlow;
         EventsFlow.open(this->FileName);
     }
 
@@ -421,7 +429,6 @@ namespace dvs_of
     {
         freeFlowStateMem(&this->myFlowState);
         EventsFlow.close();
-
     }
 
     void OpticFlow::checkVectorDirection(FlowPacket flow)
@@ -637,12 +644,14 @@ namespace dvs_of
 
         std::string folder;
 
-        if (nh_private.getParam("folder",folder)){
+        if (nh_private.getParam("folder", folder))
+        {
             ROS_INFO("Success in DVS_OF");
         };
 
-        if (nh_private.getParam("calib",calib)){
-            ROS_INFO("calibration file: %s",calib.c_str());
+        if (nh_private.getParam("calib", calib))
+        {
+            ROS_INFO("calibration file: %s", calib.c_str());
         };
 
         initializeUmap(calib);
