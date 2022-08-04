@@ -330,7 +330,6 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
           if (HullRules.size() == IllegalCount)
           {
             StopCount += 1;
-            ROS_INFO("StopCount");
             if (StopCount == MaxFailures)
             {
               StopSearch = true;
@@ -487,7 +486,6 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
 
     if ((IterationScore > MaxScore) || ((IterationScore == MaxScore) && (AmountOfVectorsUsed > MaxUsed)))
     {
-      ROS_INFO("MaxUsed = %i, MaxScore = %i", MaxUsed, MaxScore);
       NewHull = true;
       MaxScore = IterationScore;
       BestHull = HullPoints;
@@ -603,6 +601,8 @@ void estimationServer()
 void opticflowCallback(const dvs_of_msg::FlowPacketMsgArray::ConstPtr &msg) // gets the optic flow from the
 {
 
+  double beforetime = ros::Time::now().toSec();
+
   for (int i = 0; i < msg->flowpacketmsgs.size(); i = i + 1)
   {
 
@@ -627,20 +627,19 @@ void opticflowCallback(const dvs_of_msg::FlowPacketMsgArray::ConstPtr &msg) // g
 
     // Fill OF buffers and run FOE estimation
 
-    // double beforetime = ros::Time::now().toSec();
-
     // Run FOE estimation
     // std::cout << "1" << std::endl;
+
     estimationServer();
 
     FoE_msg.x = (int)FoE_x;
     FoE_msg.y = (int)FoE_y;
     FoE_pub.publish(FoE_msg);
 
-    // Add 0.5 to FoE_x for truncating by compiler to integer
-    // double calctime = ros::Time::now().toSec() - beforetime;
+    double calctime = ros::Time::now().toSec() - beforetime;
 
-    // ROS_INFO("estimationServer time: %f", calctime);
+    // Add 0.5 to FoE_x for truncating by compiler to integer
+    timelog << calctime << std::endl;
   }
 }
 
@@ -703,6 +702,8 @@ int main(int argc, char **argv)
   std::string filename_HL = "HL_recording.txt";
 
   HL_log_file.open(folder + filename_HL);
+
+  timelog.open("timing.txt");
 
   ros::spin();
 

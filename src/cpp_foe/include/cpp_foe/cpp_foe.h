@@ -76,7 +76,6 @@ int MaxFailures = 1;
 double rate_ = 1000;
 double period_ = 1.0 / rate_ * 1e9; // in nSec
 
-
 // Optic flow packet structure
 struct FlowPacket
 {
@@ -99,7 +98,6 @@ std::vector<FlowPacket> myOFBuf;
 uint64_t last_ts = 0;
 double prev_time = 0.0;
 
-
 // Logging function for incoming OF
 void log_OF(std::vector<FlowPacket> *myOF);
 
@@ -111,6 +109,7 @@ std::ofstream FoE_rec_file;
 std::ofstream FoE_flow_rec_file;
 std::ofstream HP_log_file;
 std::ofstream HL_log_file;
+std::ofstream timelog;
 
 inline const std::string currentDateTime(void)
 {
