@@ -35,6 +35,7 @@
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include <sys/stat.h>
 
 #include <ros/ros.h>
 #include <std_msgs/Float32.h>
@@ -53,7 +54,6 @@
 #include "dvs_of/settings.h"
 
 #include "std_msgs/Int32.h"
-
 
 namespace dvs_of
 {
@@ -174,8 +174,9 @@ namespace dvs_of
         void foeCallback(const std_msgs::Int32::ConstPtr &msg);
         ros::Publisher CountPublish;
 
-                std::string calib;
-
+        std::string calib;
+        std::string folder;
+        std::string orientation;
 
     private:
         ros::NodeHandle nh_;

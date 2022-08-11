@@ -179,19 +179,12 @@ namespace dvs_of
         uint64_t t0 = (*it).t;
         uint64_t tf;
         for (; it != myIMU->end(); it++)
-        { // DEPENDS ON COORDINATE SYSTEM, IN THIS CASE:
+        {
 
-            // TODO: ADD SWITCH
-
-            // DOWNWARD ORIENTATION
-            //  this->p_filt.update((*it).gyr_x); // pitch
-            //  this->q_filt.update((*it).gyr_y); // roll
-            //  this->r_filt.update((*it).gyr_z); // yaw
-
-            // FORWARD ORIENTATION
             this->p_filt.update((*it).gyr_x); // pitch
-            this->q_filt.update((*it).gyr_z); // yaw
-            this->r_filt.update((*it).gyr_y); // roll
+            this->q_filt.update((*it).gyr_y); // yaw
+            this->r_filt.update((*it).gyr_z); // roll
+
             if ((*it).t >= last_ts + this->period_ && initialized)
             {
 
@@ -642,8 +635,6 @@ namespace dvs_of
 
         CountPublish = nh_.advertise<dvs_of_msg::VectorCount>("/CountVec", 1);
 
-        std::string folder;
-
         if (nh_private.getParam("folder", folder))
         {
             ROS_INFO("Success in DVS_OF");
@@ -653,6 +644,13 @@ namespace dvs_of
         {
             ROS_INFO("calibration file: %s", calib.c_str());
         };
+
+        if (nh_private.getParam("orientation", orientation))
+        {
+            ROS_INFO("Camera orientation: %s", orientation.c_str());
+        };
+
+        int check = mkdir(folder.c_str(), 0777);
 
         initializeUmap(calib);
 
@@ -699,10 +697,18 @@ namespace dvs_of
                 imu_.acc_y = (double)(msg->linear_acceleration.y);
                 imu_.acc_z = (double)(msg->linear_acceleration.z);
 
-                imu_.gyr_x = (float)(msg->angular_velocity.x);
-                imu_.gyr_y = (float)(msg->angular_velocity.y);
-                imu_.gyr_z = (float)(msg->angular_velocity.z);
-
+                if (orientation == "downward")
+                {
+                    imu_.gyr_x = -(float)(msg->angular_velocity.x);
+                    imu_.gyr_y = (float)(msg->angular_velocity.y);
+                    imu_.gyr_z = (float)(msg->angular_velocity.z);
+                }
+                else
+                { // forward orientation
+                    imu_.gyr_x = (float)(msg->angular_velocity.x);
+                    imu_.gyr_y = (float)(msg->angular_velocity.z);
+                    imu_.gyr_z = (float)(msg->angular_velocity.y);
+                }
                 myIMU.push_back(imu_);
             }
         }

@@ -72,9 +72,9 @@ int min_vectors = 10;
 int num_average = 5;
 int AmountOfIterations = 100;
 int MaxFailures = 1;
+double rate_ = 1000;
 
 // Processing rate (Hz) for FoE estimation
-double rate_ = 1000;
 double period_ = 1.0 / rate_ * 1e9; // in nSec
 
 // Optic flow packet structure

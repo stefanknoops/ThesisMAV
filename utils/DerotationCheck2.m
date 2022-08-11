@@ -1,4 +1,4 @@
-M = csvread("../Experiments/Yaw/OF_LOGFILE.txt");
+M = csvread("../Experiments/Downward_6Dflight_1/standard/OF_LOGFILE.txt");
 
 time = M(:,1);
 x= M(:,2);

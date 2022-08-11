@@ -42,8 +42,8 @@ for i = 2:length(time)
     vztab = [vztab XYZ(3)];
     
     
-    FoEX = -atan(XYZ(1)/XYZ(2))*180/pi;
-    FoEY = -atan(XYZ(3)/XYZ(2))*180/pi;
+    FoEX = atan(XYZ(2)/XYZ(3))*180/pi;
+    FoEY = atan(XYZ(1)/XYZ(3))*180/pi;
     
     FoEXtab = [FoEXtab FoEX];
     FoEYtab = [FoEYtab FoEY];

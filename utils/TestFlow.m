@@ -1,14 +1,14 @@
-ExperimentName = '6Dflight_1';
-
+ExperimentName = 'Downward_6Dflight_1';
+Variation = 'standard';
 
 filepath1 = append('../Experiments/',ExperimentName,'/trajectory.csv');
-filepath2 = append('../Experiments/',ExperimentName,'/FoE_recording.txt');
-filepath3 = append('../Experiments/',ExperimentName,'/FoE_flow_recording.txt');
+filepath2 = append('../Experiments/',ExperimentName,'/',Variation,'/FoE_recording.txt');
+filepath3 = append('../Experiments/',ExperimentName,'/',Variation,'/FoE_flow_recording.txt');
 
-filepath4 = append('../Experiments/',ExperimentName,'/HL_recording.txt');
-filepath5 = append('../Experiments/',ExperimentName,'/HP_recording.txt');
+filepath4 = append('../Experiments/',ExperimentName,'/',Variation,'/HL_recording.txt');
+filepath5 = append('../Experiments/',ExperimentName,'/',Variation,'/HP_recording.txt');
 
-M = csvread("../Experiments/"+ExperimentName+"/OF_LOGFILE.txt");
+M = csvread("../Experiments/"+ExperimentName+"/"+Variation+"/OF_LOGFILE.txt");
 
 p = M(:,7);
 q = M(:,8);
@@ -63,7 +63,7 @@ for i = 1:size(FoE,1)
     scaling = 75;
 
     quiver(CorrespondingFlow(:,2),CorrespondingFlow(:,3),scaling*CorrespondingFlow(:,4),scaling*CorrespondingFlow(:,5),'Color','Red',"AutoScale","off")
-    %quiver(CorrespondingFlow(:,2),CorrespondingFlow(:,3),scaling*CorrespondingFlow(:,6),scaling*CorrespondingFlow(:,7),'Color','Blue',"AutoScale","off")
+    quiver(CorrespondingFlow(:,2),CorrespondingFlow(:,3),scaling*CorrespondingFlow(:,6),scaling*CorrespondingFlow(:,7),'Color','Blue',"AutoScale","off")
 
     
 

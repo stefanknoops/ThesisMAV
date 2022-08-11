@@ -1,6 +1,6 @@
 %rng(0) %seeded
 
-frequency = 500;
+frequency = 1000;
 dt = 10^9/frequency; %in ns
 time = 5;
 n_timesteps = time*10^9/dt;

@@ -2,11 +2,13 @@
   <!-- camera driver -->
   <arg name="config" default="cfg/forward_openGL_loop.conf" />
   <arg name="experiment" />
-  <arg name="calibration" default="simulator" />
+  <arg name="calibration" default="sim" />
+  <arg name="variation" default="" />
+  <arg name="orientation" default = "forward" />
 
 
   <!-- Event camera simulator -->
-  <node name="esim_node" pkg="esim_ros" type="esim_node" args="
+  <node name="esim_node" pkg="esim_ros" type="esim_node" required="true" args="
     --v=1
     --vmodule=data_provider_from_folder=10
     --flagfile=$(find esim_ros)/$(arg config)
@@ -21,16 +23,16 @@
   <node name="dvs_of" pkg="dvs_of" type="dvs_of" output="screen">
     <remap from="/dvs/events" to="/cam0/events" />
     <remap from="/dvs/imu" to="/imu" />
-    <param name="folder" value="/home/stefan/myCatkin_ws/Experiments/$(arg experiment)/" />
+    <param name="folder" value="/home/stefan/myCatkin_ws/Experiments/$(arg experiment)/$(arg variation)/" />
     <param name="calib" value="$(arg calibration)" />
-
+    <param name = "orientation" value = "$(arg orientation)" />
 
   </node>
 
 
   <node name="cpp_foe" pkg="cpp_foe" type="cpp_foe">
-
-    <param name="folder" value="/home/stefan/myCatkin_ws/Experiments/$(arg experiment)/" />
+  
+    <param name="folder" value="/home/stefan/myCatkin_ws/Experiments/$(arg experiment)/$(arg variation)/" />
 
   </node>
 

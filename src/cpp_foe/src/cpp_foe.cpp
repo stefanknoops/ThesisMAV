@@ -670,18 +670,13 @@ void log_OF(std::vector<FlowPacket> *myOF)
   myOF->clear();
 }
 
-
 void optitrackCallback(const geometry_msgs::PoseStamped::ConstPtr &msg) // gets the optic flow from the
 {
-  
 
-
-  OT_log_file << msg->header.stamp << ", " << msg->pose.position.x <<", "<< msg->pose.position.x << ", " << msg->pose.position.x << ", ";
-  OT_log_file << msg->pose.orientation.x <<", "<< msg->pose.orientation.y << ", " << msg->pose.orientation.z << ", " << msg->pose.orientation.w;
+  OT_log_file << msg->header.stamp << ", " << msg->pose.position.x << ", " << msg->pose.position.x << ", " << msg->pose.position.x << ", ";
+  OT_log_file << msg->pose.orientation.x << ", " << msg->pose.orientation.y << ", " << msg->pose.orientation.z << ", " << msg->pose.orientation.w;
 
   OT_log_file << std::endl;
-
- 
 }
 
 int main(int argc, char **argv)
@@ -690,18 +685,18 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "foe_estimator");
 
   std::string folder;
+
   ros::NodeHandle n("~");
 
   n.getParam("folder", folder);
-
   ROS_INFO_STREAM("folder name: " << folder);
+
 
   // Initialize subscribers and publishers
   ros::Subscriber sub = n.subscribe("/OpticFlow", 1, opticflowCallback);
   ros::Subscriber sub2 = n.subscribe("/optitrack/pose", 1, optitrackCallback);
 
   FoE_pub = n.advertise<cpp_foe::FoE>("/FoE", 1);
-
 
   std::string myDate = currentDateTime();
   std::string filename = "FoE_recording.txt";
@@ -716,8 +711,16 @@ int main(int argc, char **argv)
   OT_log_file.open(folder + filename_OT);
   timelog.open("timing.txt");
 
+  std::ofstream settings;
+  settings.open(folder  + "settings.txt");
+  settings << "min_vectors = " << min_vectors << std::endl
+           << "num_average = " << num_average << std::endl;
+  settings << "AmountOfIterations = " << AmountOfIterations << std::endl
+           << "MaxFailures = " << MaxFailures << std::endl;
+  settings << "rate = " << rate_ << std::endl;
+  settings.close();
+
   ros::spin();
 
   return 0;
 }
-

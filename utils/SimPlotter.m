@@ -1,11 +1,11 @@
-ExperimentName = '6Dflight_1';
-
+ExperimentName = 'Downward_6Dflight_5';
+Variation = 'standard';
 
 filepath1 = append('../Experiments/',ExperimentName,'/trajectory.csv');
-filepath2 = append('../Experiments/',ExperimentName,'/FoE_recording.txt');
+filepath2 = append('../Experiments/',ExperimentName,'/',Variation,'/FoE_recording.txt');
 filepath3 = append('../Experiments/',ExperimentName,'/Expected_FoE.csv');
 filepath4 = append('../Experiments/',ExperimentName,'/SimulatedPose.csv');
-filepath5 = append('../Experiments/',ExperimentName,'/OF_LOGFILE.txt');
+filepath5 = append('../Experiments/',ExperimentName,'/',Variation,'/OF_LOGFILE.txt');
 
 
 OF = csvread(filepath5,1);
@@ -93,7 +93,7 @@ xlabel('time [s]')
 set(gca,'FontSize',12)
 
 set(gcf,'Position',[100 100 1200 600])
-filepath = append('../Experiments/',ExperimentName,'/',ExperimentName,'_FoEEstimation.pdf');
+filepath = append('../Experiments/',ExperimentName,'/',Variation,'/',ExperimentName,'_',Variation,'_FoEEstimation.pdf');
 exportgraphics(gcf,filepath,'ContentType','vector')
 
 figure(6)
@@ -143,15 +143,15 @@ set(gca,'FontSize',12)
 xlabel('\epsilon_y')
 ylabel('n')
 
-filepath = append('../Experiments/',ExperimentName,'/',ExperimentName,'_EstimationError.pdf');
+filepath = append('../Experiments/',ExperimentName,'/',Variation,'/',ExperimentName,'_',Variation,'_EstimationError.pdf');
 exportgraphics(gcf,filepath,'ContentType','vector')
 
-disp("Mean absolute error x: "+string(mean(abs(err_x)))+". Standard deviation error: "+string(std(err_x)))
-disp("Mean absolute error y: "+string(mean(abs(err_y)))+". Standard deviation error: "+string(std(err_y)))
+disp("Mean absolute error x: "+string(mean((err_x)))+". Standard deviation error: "+string(std(err_x)))
+disp("Mean absolute error y: "+string(mean((err_y)))+". Standard deviation error: "+string(std(err_y)))
 disp("Median amount of flow vectors: "+string(mean(EstimatedFoE(:,7))))
 disp("Average frequency: "+ string(size(EstimatedFoE(:,1),1)/max(EstimatedFoE(:,1))))
 
-disp(string(" & "+mean(abs(err_x))) +" & "+ string(std(err_x)) +" & "+string(mean(abs(err_y))) +" & "+string(std(err_y)) )
+disp(string(" & "+mean((err_x))) +" & "+ string(std(err_x)) +" & "+string(mean((err_y))) +" & "+string(std(err_y)) )
 
 figure(4)
 smoothfreq = smooth(EstimatedFoE(2:end,1),1./diff(EstimatedFoE(:,1)),30);

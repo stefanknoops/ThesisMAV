@@ -38,6 +38,7 @@ namespace dvs_of
 
             undistortionMapX = undistortionMapX_222;
             undistortionMapY = undistortionMapY_222;
+            ROS_INFO("Calibration map successfully set");
         }
         else
         {
@@ -45,9 +46,16 @@ namespace dvs_of
 
             undistortionMapX = undistortionMapX_sim;
             undistortionMapY = undistortionMapY_sim;
-        }
 
-        ROS_INFO("Calibration map successfully set");
+            if (calib == "sim")
+            {
+                ROS_INFO("Calibration map successfully set");
+            }
+            else
+            {
+                ROS_WARN("Could not find calibration map. Set to simulation map instead");
+            }
+        }
     }
 
     float dvsGetUndistortedPixelX(uint16_t x, uint16_t y)
