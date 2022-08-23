@@ -601,7 +601,7 @@ void estimationServer()
 void opticflowCallback(const dvs_of_msg::FlowPacketMsgArray::ConstPtr &msg) // gets the optic flow from the
 {
 
-  double beforetime = ros::Time::now().toSec();
+  double beforetime = ros::WallTime::now().toSec();
 
   for (int i = 0; i < msg->flowpacketmsgs.size(); i = i + 1)
   {
@@ -636,7 +636,7 @@ void opticflowCallback(const dvs_of_msg::FlowPacketMsgArray::ConstPtr &msg) // g
     FoE_msg.y = (int)FoE_y;
     FoE_pub.publish(FoE_msg);
 
-    double calctime = ros::Time::now().toSec() - beforetime;
+    double calctime = ros::WallTime::now().toSec() - beforetime;
 
     // Add 0.5 to FoE_x for truncating by compiler to integer
     timelog << calctime << std::endl;

@@ -1,4 +1,4 @@
-M = csvread("../Experiments/Downward_6Dflight_1/standard/OF_LOGFILE.txt");
+M = csvread("../Experiments/Pitch/standard/OF_LOGFILE.txt");
 
 time = M(:,1);
 x= M(:,2);
@@ -20,7 +20,7 @@ norm_y = (y-90)/90;
 
 mag_of = sqrt((unpro_u).^2 + (unpro_v).^2);
 mag_rot = sqrt((rot_u).^2 + (rot_v).^2);
-mag_derot = sqrt((mean(derot_u)).^2 + (mean(derot_v)).^2);
+mag_derot = (sqrt(((derot_u)).^2 + ((derot_v)).^2));
 
 figure(2)
 
@@ -35,7 +35,8 @@ legend('Magnitude rotation','Magnitude optic flow')
 xlabel('Normalized y coordinate')
 ylabel('Vector magnitude')
 
-disp([mean(mag_of),std(mag_of),mean(mag_derot),std(mag_derot)])
+disp("$"+norm(mean([unpro_u,unpro_v]))+"$ & $"+norm(std([unpro_u,unpro_v]))+"$ & $"+norm(mean([derot_u,derot_v]))+"$ & $"+norm(std([derot_u,derot_v]))+"$")
+
     
 for i=1:100:size(time,1)
     figure(1)

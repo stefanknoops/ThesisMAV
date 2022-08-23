@@ -1,4 +1,4 @@
-ExperimentName = 'Downward_6Dflight_5';
+ExperimentName = 'Yaw';
 Variation = 'standard';
 
 filepath1 = append('../Experiments/',ExperimentName,'/trajectory.csv');
@@ -148,7 +148,7 @@ exportgraphics(gcf,filepath,'ContentType','vector')
 
 disp("Mean absolute error x: "+string(mean((err_x)))+". Standard deviation error: "+string(std(err_x)))
 disp("Mean absolute error y: "+string(mean((err_y)))+". Standard deviation error: "+string(std(err_y)))
-disp("Median amount of flow vectors: "+string(mean(EstimatedFoE(:,7))))
+disp("Mean amount of flow vectors: "+string(mean(EstimatedFoE(:,7))))
 disp("Average frequency: "+ string(size(EstimatedFoE(:,1),1)/max(EstimatedFoE(:,1))))
 
 disp(string(" & "+mean((err_x))) +" & "+ string(std(err_x)) +" & "+string(mean((err_y))) +" & "+string(std(err_y)) )

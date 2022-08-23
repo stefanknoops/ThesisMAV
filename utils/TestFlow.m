@@ -1,4 +1,4 @@
-ExperimentName = 'Downward_6Dflight_1';
+ExperimentName = 'Yaw';
 Variation = 'standard';
 
 filepath1 = append('../Experiments/',ExperimentName,'/trajectory.csv');
@@ -60,7 +60,7 @@ for i = 1:size(FoE,1)
     Indeces = (Flow(:,1) == FoE(i,1));
     CorrespondingFlow = Flow(Indeces,:);
     
-    scaling = 75;
+    scaling = 25;
 
     quiver(CorrespondingFlow(:,2),CorrespondingFlow(:,3),scaling*CorrespondingFlow(:,4),scaling*CorrespondingFlow(:,5),'Color','Red',"AutoScale","off")
     quiver(CorrespondingFlow(:,2),CorrespondingFlow(:,3),scaling*CorrespondingFlow(:,6),scaling*CorrespondingFlow(:,7),'Color','Blue',"AutoScale","off")
