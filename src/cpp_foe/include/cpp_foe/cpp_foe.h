@@ -74,6 +74,8 @@ int AmountOfIterations = 100;
 int MaxFailures = 1;
 double rate_ = 1000;
 
+double beforetime = 0;
+
 // Processing rate (Hz) for FoE estimation
 double period_ = 1.0 / rate_ * 1e9; // in nSec
 

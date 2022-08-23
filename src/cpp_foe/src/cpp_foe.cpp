@@ -548,7 +548,9 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
 
     int64_t current_time = OpticFlow[0].t;
 
-    FoE_rec_file << current_time << ", " << *FoE_x << ", " << *FoE_y << ", " << FOEX << ", " << FOEY << ", " << FoE_hist_x.size() << ", " << ArraySize << ", " << MaxScore << ", " << MaxUsed << std::endl;
+    double calctime = ros::WallTime::now().toSec() - beforetime;
+
+    FoE_rec_file << current_time << ", " << *FoE_x << ", " << *FoE_y << ", " << FOEX << ", " << FOEY << ", " << FoE_hist_x.size() << ", " << ArraySize << ", " << MaxScore << ", " << MaxUsed << ", " << calctime << std::endl;
 
     for (int i = 0; i < BestHullLines.size(); i++)
     { // std::cout << "besthull" << current_time << "," << BestHullLines[i][0] << "," << BestHullLines[i][1] << "," << BestHullLines[i][2] << std::endl;
@@ -601,7 +603,7 @@ void estimationServer()
 void opticflowCallback(const dvs_of_msg::FlowPacketMsgArray::ConstPtr &msg) // gets the optic flow from the
 {
 
-  double beforetime = ros::WallTime::now().toSec();
+  beforetime = ros::WallTime::now().toSec();
 
   for (int i = 0; i < msg->flowpacketmsgs.size(); i = i + 1)
   {
@@ -636,10 +638,7 @@ void opticflowCallback(const dvs_of_msg::FlowPacketMsgArray::ConstPtr &msg) // g
     FoE_msg.y = (int)FoE_y;
     FoE_pub.publish(FoE_msg);
 
-    double calctime = ros::WallTime::now().toSec() - beforetime;
-
     // Add 0.5 to FoE_x for truncating by compiler to integer
-    timelog << calctime << std::endl;
   }
 }
 
@@ -691,7 +690,6 @@ int main(int argc, char **argv)
   n.getParam("folder", folder);
   ROS_INFO_STREAM("folder name: " << folder);
 
-
   // Initialize subscribers and publishers
   ros::Subscriber sub = n.subscribe("/OpticFlow", 1, opticflowCallback);
   ros::Subscriber sub2 = n.subscribe("/optitrack/pose", 1, optitrackCallback);
@@ -712,7 +710,7 @@ int main(int argc, char **argv)
   timelog.open("timing.txt");
 
   std::ofstream settings;
-  settings.open(folder  + "settings.txt");
+  settings.open(folder + "settings.txt");
   settings << "min_vectors = " << min_vectors << std::endl
            << "num_average = " << num_average << std::endl;
   settings << "AmountOfIterations = " << AmountOfIterations << std::endl
