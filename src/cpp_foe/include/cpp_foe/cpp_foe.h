@@ -33,6 +33,7 @@
 #include <fstream>
 #include <mutex>
 #include <numeric>
+#include <sys/stat.h>
 
 #include "ros/ros.h"
 
