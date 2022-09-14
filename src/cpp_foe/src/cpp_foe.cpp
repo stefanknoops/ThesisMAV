@@ -707,7 +707,7 @@ int main(int argc, char **argv)
   HL_log_file.open(folder + filename_HL);
   std::string filename_OT = "Optitrack_recording.txt";
   OT_log_file.open(folder + filename_OT);
-  timelog.open("timing.txt");
+  timelog.open(folder+"timing.txt");
 
   std::ofstream settings;
   settings.open(folder + "settings.txt");

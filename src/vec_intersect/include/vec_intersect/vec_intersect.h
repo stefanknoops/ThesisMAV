@@ -42,7 +42,7 @@
 #include "std_msgs/Int64.h"
 #include "std_msgs/Int64MultiArray.h"
 #include "geometry_msgs/PoseStamped.h"
-#include "cpp_foe/FoE.h"
+#include "vec_intersect/FoE.h"
 #include "std_msgs/Int16.h"
 
 // Required by FOE estimation
@@ -58,7 +58,7 @@ std::mutex prepMutex;
 
 // FoE publisher and message
 ros::Publisher FoE_pub;
-cpp_foe::FoE FoE_msg;
+vec_intersect::FoE FoE_msg;
 
 std::vector<double> FoE_hist_x{};
 std::vector<double> FoE_hist_y{};
@@ -69,7 +69,7 @@ int FOV_X = 240;
 int FOV_Y = 180;
 
 int min_vectors = 10;
-int num_average = 50;
+int num_average = 5;
 int AmountOfIterations = 100;
 int MaxFailures = 1;
 double rate_ = 1000;

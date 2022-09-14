@@ -53,7 +53,7 @@ while ~valid
     quat = eul2quat([yaw,roll,pitch]);
 
 
-    [SimulatedFoE_X, SimulatedFoE_Y,vx,vz,vy] = ForwardOptiTrackFoE(t_sim,x,y,z,quat(:,1),quat(:,2),quat(:,3),quat(:,4));
+    [SimulatedFoE_X, SimulatedFoE_Y,vx,vy,vz] = ForwardOptiTrackFoE(t_sim,x,y,z,quat(:,1),quat(:,2),quat(:,3),quat(:,4));
 
     if any(abs(SimulatedFoE_X) > FOV_X/2) || any(abs(SimulatedFoE_Y) > FOV_Y/2)
         n = n+1;

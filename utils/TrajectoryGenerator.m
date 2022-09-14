@@ -13,7 +13,7 @@ FOV_X = 61.7164;
 FOV_Y = 48.2168;
 
 
-filename = 'Shaking2D_forward';
+filename = '6Dflight_1';
 
 
 

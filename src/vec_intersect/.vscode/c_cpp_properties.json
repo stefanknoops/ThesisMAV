@@ -1,0 +1,22 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "",
+        "limitSymbolsToIncludedHeaders": true
+      },
+      "includePath": [
+        "/home/stefan/myCatkin_ws/devel/include/**",
+        "/opt/ros/noetic/include/**",
+        "/home/stefan/myCatkin_ws/src/rpg_dvs_ros/davis_ros_driver/include/**",
+        "/home/stefan/myCatkin_ws/src/dvs_of/include/**",
+        "/home/stefan/myCatkin_ws/src/dvs_server/include/**",
+        "/home/stefan/myCatkin_ws/src/foe_estimator/include/**",
+        "/home/stefan/myCatkin_ws/src/object_detection/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS"
+    }
+  ],
+  "version": 4
+}

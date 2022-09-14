@@ -1,5 +1,5 @@
-ExperimentName = 'Yaw';
-Variation = 'standard';
+ExperimentName = '6Dflight_1';
+Variation = '50_average';
 
 filepath1 = append('../Experiments/',ExperimentName,'/trajectory.csv');
 filepath2 = append('../Experiments/',ExperimentName,'/',Variation,'/FoE_recording.txt');
@@ -146,12 +146,12 @@ ylabel('n')
 filepath = append('../Experiments/',ExperimentName,'/',Variation,'/',ExperimentName,'_',Variation,'_EstimationError.pdf');
 exportgraphics(gcf,filepath,'ContentType','vector')
 
-disp("Mean absolute error x: "+string(mean((err_x)))+". Standard deviation error: "+string(std(err_x)))
-disp("Mean absolute error y: "+string(mean((err_y)))+". Standard deviation error: "+string(std(err_y)))
+disp("Mean absolute error x: "+string(mean(abs(err_x)))+". Standard deviation error: "+string(std(err_x)))
+disp("Mean absolute error y: "+string(mean(abs(err_y)))+". Standard deviation error: "+string(std(err_y)))
 disp("Mean amount of flow vectors: "+string(mean(EstimatedFoE(:,7))))
 disp("Average frequency: "+ string(size(EstimatedFoE(:,1),1)/max(EstimatedFoE(:,1))))
 
-disp(string(" & "+mean((err_x))) +" & "+ string(std(err_x)) +" & "+string(mean((err_y))) +" & "+string(std(err_y)) )
+disp(string(" & "+mean(abs(err_x))) +" & "+ string(std(err_x)) +" & "+string(mean(abs(err_y))) +" & "+string(std(err_y)) )
 
 figure(4)
 smoothfreq = smooth(EstimatedFoE(2:end,1),1./diff(EstimatedFoE(:,1)),30);
@@ -167,6 +167,11 @@ plot(OF(:,1),totalrotation);
 subplot(2,1,2)
 plot(OF(:,1),[p,q,r])
 legend("p","q","r")
+
+figure(7)
+boxplot(EstimatedFoE(:,10));
+ylabel("Calculation time")
+disp("Average calculation time: "+string(mean(EstimatedFoE(:,10)))+". Std: "+string(std(EstimatedFoE(:,10))))
 
 % err_x = TrueFoE(1,2) - EstimatedFoE(:,2);
 % err_y = TrueFoE(1,3) - EstimatedFoE(:,3);
