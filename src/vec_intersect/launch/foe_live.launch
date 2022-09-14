@@ -1,7 +1,7 @@
 <launch>
   <!-- camera driver -->
 
-  <arg name="experiment" default="unspecified" />
+  <arg name="experiment"/>
   <arg name="calibration" default="cam_222" />
 
 
