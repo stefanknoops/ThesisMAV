@@ -345,6 +345,7 @@ int main(int argc, char **argv)
 
   n.getParam("folder", folder);
   ROS_INFO_STREAM("folder name: " << folder);
+  int check = mkdir(folder.c_str(), 0777);
 
   // Initialize subscribers and publishers
   ros::Subscriber sub = n.subscribe("/OpticFlow", 1, opticflowCallback);

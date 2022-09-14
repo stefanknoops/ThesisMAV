@@ -44,6 +44,8 @@
 #include "geometry_msgs/PoseStamped.h"
 #include "vec_intersect/FoE.h"
 #include "std_msgs/Int16.h"
+#include <sys/stat.h>
+
 
 // Required by FOE estimation
 #include <cstddef>
