@@ -689,6 +689,7 @@ int main(int argc, char **argv)
 
   n.getParam("folder", folder);
   ROS_INFO_STREAM("folder name: " << folder);
+  int check = mkdir(folder.c_str(), 0777);
 
   // Initialize subscribers and publishers
   ros::Subscriber sub = n.subscribe("/OpticFlow", 1, opticflowCallback);
@@ -707,7 +708,7 @@ int main(int argc, char **argv)
   HL_log_file.open(folder + filename_HL);
   std::string filename_OT = "Optitrack_recording.txt";
   OT_log_file.open(folder + filename_OT);
-  timelog.open(folder+"timing.txt");
+  timelog.open(folder + "timing.txt");
 
   std::ofstream settings;
   settings.open(folder + "settings.txt");
