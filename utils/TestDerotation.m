@@ -1,4 +1,4 @@
-M = csvread("../Experiments/Yawing/OF_LOGFILE_.txt");
+M = csvread("../Experiments/test_yaw/OF_LOGFILE.txt");
 
 
 time = M(:,1);

@@ -1,5 +1,5 @@
-ExperimentName = '6Dflight_1';
-Variation = '50_average';
+ExperimentName = 'faith_1';
+Variation = '';
 
 filepath1 = append('../Experiments/',ExperimentName,'/trajectory.csv');
 filepath2 = append('../Experiments/',ExperimentName,'/',Variation,'/FoE_recording.txt');

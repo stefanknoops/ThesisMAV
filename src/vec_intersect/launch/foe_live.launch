@@ -3,6 +3,7 @@
 
   <arg name="experiment"/>
   <arg name="calibration" default="cam_222" />
+  <arg name="orientation" default="dvs" />
 
 
   <node name="davis_ros_driver" pkg="davis_ros_driver" type="davis_ros_driver" output="screen">
@@ -12,14 +13,15 @@
 
   <!-- visualization -->
   <node name="dvs_of" pkg="dvs_of" type="dvs_of" output="screen">
-    <param name="folder" value="/home/mavlab/ThesisMAV/Experiments/$(arg experiment)/" />
+    <param name="folder" value="/home/stefan/myCatkin_ws/Experiments/$(arg experiment)/" />
     <param name="calib" value="$(arg calibration)" />
+    <param name = "orientation" value = "$(arg orientation)" />
 
 
   </node>
 
 
-  <node name="cpp_foe" pkg="cpp_foe" type="cpp_foe">
+  <node name="vec_intersect" pkg="vec_intersect" type="vec_intersect">
 
     <param name="folder" value="/home/mavlab/ThesisMAV/Experiments/$(arg experiment)/" />
 

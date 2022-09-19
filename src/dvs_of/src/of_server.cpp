@@ -217,8 +217,8 @@ namespace dvs_of
                 rates_t newRates;
 
                 newRates.p = (*it).gyr_x;
-                newRates.q = (*it).gyr_z;
-                newRates.r = (*it).gyr_y;
+                newRates.q = (*it).gyr_y;
+                newRates.r = (*it).gyr_z;
 
                 NewBuffer.push_back(newRates);
                 if (NewBuffer.size() > 5)
@@ -702,6 +702,12 @@ namespace dvs_of
                     imu_.gyr_x = -(float)(msg->angular_velocity.x);
                     imu_.gyr_y = (float)(msg->angular_velocity.y);
                     imu_.gyr_z = (float)(msg->angular_velocity.z);
+                }
+                else if (orientation == "dvs")
+                {
+                    imu_.gyr_x = -(float)(msg->angular_velocity.x);
+                    imu_.gyr_y = -(float)(msg->angular_velocity.y);
+                    imu_.gyr_z = -(float)(msg->angular_velocity.z);
                 }
                 else
                 { // forward orientation

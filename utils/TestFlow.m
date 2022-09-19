@@ -1,5 +1,5 @@
-ExperimentName = 'Yaw';
-Variation = 'standard';
+ExperimentName = 'faith_a9';
+Variation = '';
 
 filepath1 = append('../Experiments/',ExperimentName,'/trajectory.csv');
 filepath2 = append('../Experiments/',ExperimentName,'/',Variation,'/FoE_recording.txt');
@@ -21,7 +21,7 @@ figure(21)
 clf;
 plot(time,[p,q,r])
 
-traj = csvread(filepath1,1);
+traj = csvread(filepath1,8);
 
 
 
