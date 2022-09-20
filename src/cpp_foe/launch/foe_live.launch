@@ -13,7 +13,7 @@
 
   <!-- visualization -->
   <node name="dvs_of" pkg="dvs_of" type="dvs_of" output="screen">
-    <param name="folder" value="/home/mavlab/ThesisMAV/xperiments/$(arg experiment)/" />
+    <param name="folder" value="/home/mavlab/ThesisMAV/Experiments/$(arg experiment)/" />
     <param name="calib" value="$(arg calibration)" />
     <param name = "orientation" value = "$(arg orientation)" />
 
@@ -23,7 +23,7 @@
 
   <node name="cpp_foe" pkg="cpp_foe" type="cpp_foe">
 
-    <param name="folder" value="/home/stefan/myCatkin_ws/Experiments/$(arg experiment)/" />
+    <param name="folder" value="/home/mavlab/ThesisMAV/Experiments/$(arg experiment)/" />
 
   </node>
 

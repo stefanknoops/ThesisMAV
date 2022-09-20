@@ -1,4 +1,4 @@
-M = csvread("../Experiments/test_rot/OF_LOGFILE.txt");
+M = csvread("../Experiments/test_rot_vec/OF_LOGFILE.txt");
 
 time = M(:,1);
 x= M(:,2);
