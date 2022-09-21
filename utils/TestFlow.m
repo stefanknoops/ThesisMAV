@@ -1,4 +1,4 @@
-ExperimentName = 'faith_a9';
+ExperimentName = 'faith_b4';
 Variation = '';
 
 filepath1 = append('../Experiments/',ExperimentName,'/trajectory.csv');

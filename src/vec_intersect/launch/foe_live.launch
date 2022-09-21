@@ -1,7 +1,7 @@
 <launch>
   <!-- camera driver -->
 
-  <arg name="experiment"/>
+  <arg name="experiment" />
   <arg name="calibration" default="cam_222" />
   <arg name="orientation" default="dvs" />
 
@@ -15,7 +15,7 @@
   <node name="dvs_of" pkg="dvs_of" type="dvs_of" output="screen">
     <param name="folder" value="/home/mavlab/ThesisMAV/Experiments/$(arg experiment)/" />
     <param name="calib" value="$(arg calibration)" />
-    <param name = "orientation" value = "$(arg orientation)" />
+    <param name="orientation" value="$(arg orientation)" />
 
 
   </node>
@@ -26,5 +26,6 @@
     <param name="folder" value="/home/mavlab/ThesisMAV/Experiments/$(arg experiment)/" />
 
   </node>
+  <node pkg="rosbag" type="record" name="rosbag_record_cam" args="record -o /home/mavlab/ThesisMAV/Experiments/$(arg experiment)/ /dvs/imu /dvs/events " />
 
 </launch>
