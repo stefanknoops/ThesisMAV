@@ -1,0 +1,6 @@
+build/*
+devel/*
+Experiments/*
+logs/*
+.vscode/*
+.catkin_tools/*

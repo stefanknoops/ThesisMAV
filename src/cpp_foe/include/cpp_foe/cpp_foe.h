@@ -70,7 +70,7 @@ int FOV_X = 240;
 int FOV_Y = 180;
 
 int min_vectors = 10;
-int num_average = 5;
+int num_average = 30;
 int AmountOfIterations = 50;
 int MaxFailures = 1;
 double rate_ = 1000;

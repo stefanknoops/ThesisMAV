@@ -5,12 +5,6 @@
   <arg name="calibration" default="cam_222" />
   <arg name="orientation" default="dvs" />
 
-
-  <node name="davis_ros_driver" pkg="davis_ros_driver" type="davis_ros_driver" output="screen">
-    <remap from="camera_info" to="/dvs/camera_info" />
-    <remap from="imu" to="/dvs/imu" />
-  </node>
-
   <!-- visualization -->
   <node name="dvs_of" pkg="dvs_of" type="dvs_of" output="screen">
     <param name="folder" value="/home/mavlab/ThesisMAV/Experiments/$(arg experiment)/" />
@@ -18,13 +12,20 @@
     <param name="orientation" value="$(arg orientation)" />
   </node>
 
+  <node name="dvs_renderer_left" pkg="dvs_renderer" type="dvs_renderer" output="screen">
+    <param name="display_method" value="red-blue"/>
+    <remap from="events" to="/dvs/events" />
+    <remap from="image" to="/dvs/image_raw" />
+    <remap from="dvs_rendering" to="dvs_rendering" />
+  </node>
+
+  <node name="foe_visualization" pkg="cpp_foe" type="foe_visualization" output="screen">
+  </node>
 
   <node name="cpp_foe" pkg="cpp_foe" type="cpp_foe">
     <param name="folder" value="/home/mavlab/ThesisMAV/Experiments/$(arg experiment)/" />
   </node>
 
- 
   <node pkg="rosbag" type="record" name="rosbag_record_cam" args="record -o /home/mavlab/ThesisMAV/Experiments/$(arg experiment)/ /dvs/imu /dvs/events /OpticFlow /FoE" />
-
 
 </launch>
