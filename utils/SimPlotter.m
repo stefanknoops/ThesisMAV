@@ -1,5 +1,5 @@
-ExperimentName = 'faith_1';
-Variation = '';
+ExperimentName = 'Downward_6Dflight_1';
+Variation = '50_average';
 
 filepath1 = append('../Experiments/',ExperimentName,'/trajectory.csv');
 filepath2 = append('../Experiments/',ExperimentName,'/',Variation,'/FoE_recording.txt');
@@ -74,8 +74,8 @@ scatter(EstimatedFoE(:,1),EstimatedFoE(:,4),"Marker",".","SizeData",3)
 plot(TrueFoE(:,1),TrueFoE(:,2),'Color','red');
 ylim([-FOV_X*1.05/2,FOV_X*1.05/2]*180/pi)
 yline([-FOV_X/2,FOV_X/2]*180/pi,'--')
-legend({'Estimated FoE_x','Current prediction','True FoE_x','Lower bound','Upper bound'},'Location','eastoutside')
-ylabel('FoE position [deg]') 
+legend({'Estimated FoE_x','Current prediction','True FoE_x','Camera FOV bounds'},'Location','eastoutside')
+ylabel('FoE position x [deg]') 
 xlabel('time [s]') 
 set(gca,'FontSize',12)
 
@@ -87,8 +87,8 @@ scatter(EstimatedFoE(:,1),EstimatedFoE(:,5),"Marker",".","SizeData",3)
 plot(TrueFoE(:,1),TrueFoE(:,3),'Color','red');
 ylim([-FOV_Y*1.05/2,FOV_Y*1.05/2]*180/pi)
 yline([-FOV_Y/2,FOV_Y/2]*180/pi,'--')
-legend({'Estimated FoE_y','Current prediction','True FoE_y','Lower bound','Upper bound'},'Location','eastoutside')
-ylabel('FoE position [deg]') 
+legend({'Estimated FoE_y','Current prediction','True FoE_y','Camera FOV bounds'},'Location','eastoutside')
+ylabel('FoE position y [deg]') 
 xlabel('time [s]') 
 set(gca,'FontSize',12)
 
@@ -167,11 +167,11 @@ plot(OF(:,1),totalrotation);
 subplot(2,1,2)
 plot(OF(:,1),[p,q,r])
 legend("p","q","r")
-
-figure(7)
-boxplot(EstimatedFoE(:,10));
-ylabel("Calculation time")
-disp("Average calculation time: "+string(mean(EstimatedFoE(:,10)))+". Std: "+string(std(EstimatedFoE(:,10))))
+% 
+% figure(7)
+% boxplot(EstimatedFoE(:,10));
+% ylabel("Calculation time")
+% disp("Average calculation time: "+string(mean(EstimatedFoE(:,10)))+". Std: "+string(std(EstimatedFoE(:,10))))
 
 % err_x = TrueFoE(1,2) - EstimatedFoE(:,2);
 % err_y = TrueFoE(1,3) - EstimatedFoE(:,3);
@@ -182,5 +182,39 @@ disp("Average calculation time: "+string(mean(EstimatedFoE(:,10)))+". Std: "+str
 % subplot(2,1,2);
 % histogram(err_y,100);
 
+figure(88)
+plot3(sim_x,sim_z,abs(sim_y))
+xlabel('x [m]')
+ylabel('y [m]')
+zlabel('z [m]')
+
+grid on
+axis equal;set(gca,'FontSize',12)
+
+figure(80);clf;
+
+subplot(2,1,1)
+plot(traj(:,1),traj(:,2)-traj(1,2));
+hold on
+plot(traj(:,1),traj(:,3)-traj(1,3));
+legend({'x','y'},'Location','eastoutside')
+xlabel('t [s]')
+ylabel('pos [m]')
+grid on
+set(gca,'FontSize',12)
+
+
+subplot(2,1,2)
+plot(traj(:,1),-(traj(:,4)-traj(1,4)),'green');
+legend({'z'},'Location','eastoutside')
+
+xlabel('t [s]')
+ylabel('pos [m]')
+grid on
+set(gca,'FontSize',12)
+
+
+filepath = append('../Experiments/',ExperimentName,'/','traj.pdf');
+exportgraphics(gcf,filepath,'ContentType','vector')
 
 

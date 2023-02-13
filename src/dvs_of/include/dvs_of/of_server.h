@@ -69,7 +69,7 @@ namespace dvs_of
         uint8_t num_ele = 5; // = 5
         MedianFilter p_filt = MedianFilter(num_ele);
         MedianFilter q_filt = MedianFilter(num_ele);
-        MedianFilter r_filt = MedianFilter(num_ele);
+        MedianFilterF r_filt = MedianFilter(num_ele);
 
         rates_t *buffer_;
 
