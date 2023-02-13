@@ -54,7 +54,6 @@ namespace dvs_of
         rate.p /= NewBuffer.size();
         rate.q /= NewBuffer.size();
         rate.r /= NewBuffer.size();
-        // std::cout << "rate p new " << rate.p << "\n";
         rate.ts = NewBuffer[NewBuffer.size() - 1].ts;
 
         this->rates_mutex.unlock();
@@ -120,9 +119,7 @@ namespace dvs_of
         static rates_t zero_rates = {0.f, 0.f, 0.f, 0};
         static int64_t last_ts = 0;
 
-        // Pass gyro through median filter to remove outliers
-        // std::cout << "\n\t ... Filtering IMU." << std::endl;
-        // ROS_INFO_STREAM(" ... Filtering IMU.");
+
 
         std::vector<IMU>::iterator it = myIMU->begin();
         uint64_t t0 = (*it).t;
@@ -130,9 +127,7 @@ namespace dvs_of
         for (; it != myIMU->end(); it++)
         {
 
-            // float p_filt_median = this->p_filt.update((*it).gyr_x); // pitch
-            // float q_filt_median = this->q_filt.update((*it).gyr_y); // yaw
-            // float r_filt_median = this->r_filt.update((*it).gyr_z); // roll
+
 
             float p_new = (*it).gyr_x;
             float q_new = (*it).gyr_y;
@@ -176,9 +171,7 @@ namespace dvs_of
             if (!initialized)
             {
                 init_counter++;
-                // zero_rates.p += this->p_filt.get_median();
-                // zero_rates.q += this->q_filt.get_median();
-                // zero_rates.r += this->r_filt.get_median();
+
                 zero_rates.p += p_new;
                 zero_rates.q += q_new;
                 zero_rates.r += r_new;
@@ -354,18 +347,15 @@ namespace dvs_of
 
         // Derotate the flow
         // // Normalize the x,y coordinates
-        // x_nor = 1.2*(((FlowPacket.x / 120.f) - 1.f));
-        // y_nor = 1.2*(((FlowPacket.y / 90.f) - 1.f)); // scale as the image is not square
+
 
         x_nor = dvsGetUndistortedPixelX(FlowPacket.x, FlowPacket.y);
         y_nor = dvsGetUndistortedPixelY(FlowPacket.x, FlowPacket.y); // scale as the image is not square
 
-        // std::cout << FlowPacket.x << ";" << x_nor << ";" << FlowPacket.y << ";" << y_nor << std::endl;
 
         rotational_u = -(-rates.q + rates.r * y_nor + rates.p * x_nor * y_nor - rates.q * x_nor * x_nor);
         rotational_v = -(rates.p - rates.r * x_nor - rates.q * x_nor * y_nor + rates.p * y_nor * y_nor);
 
-        // std::cout << "rot_u = " << rotational_u << ", \t" << "rot_v = "<< rotational_v << std::endl;
 
         double mag_OF = 0.f, mag_OF_rot = 0.f, ang_OF = 0.f, ang_OF_rot = 0.f, OF_proj = 0.f, OF_der_pre = 0.f, OF_der = 0.f, u_der = 0.f, v_der = 0.f, pos_ang_OF_rot = 0.f, pos_ang_OF = 0.f;
 
@@ -404,15 +394,7 @@ namespace dvs_of
         OF_proj = mag_OF_rot * cos(abs(pos_ang_OF_rot - pos_ang_OF));
         OF_der = mag_OF - OF_proj;
 
-        // Map only when rotational part does not exceed total flow
-        //  if (OF_der_pre > 0)
-        //  {
-        //      OF_der = OF_der_pre;
-        //  }
-        //  else
-        //  {
-        //      OF_der = 0;
-        //  }
+
 
         // Return to (u,v) notation
         this->u_der = OF_der * cos(pos_ang_OF);

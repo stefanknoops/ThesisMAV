@@ -162,14 +162,6 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
 
   // add initial hull to all lines
 
-  // all_lines = NormalLines;
-  // for (i = 0; i < InitialHullLines.size(); i++)
-  // {
-  //   std::vector<double> append_vector = {InitialHullLines[i]};
-  //   all_lines.push_back(append_vector);
-  // }
-
-  // AmountOfIterations = std::min(AmountOfIterations,ArraySize);
 
   for (int n = 0; n < AmountOfIterations; n++)
   {
@@ -253,9 +245,7 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
         double CramerD = RandomNormal[1];
         double CramerF = -RandomNormal[2];
 
-        // ROS_INFO("Hull Line to evaluate:  a %lf, b ,%lf, c %lf", HullLines[i][0], HullLines[i][1], HullLines[i][2]);
-        //  ROS_INFO("HL b %lf", HullLines[i][1]);
-        //  ROS_INFO("HL c %lf", HullLines[i][2]);
+   
 
         double DeterminantA = CramerA * CramerD - CramerB * CramerC;
 
@@ -268,13 +258,11 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
           double IntersectionX = (CramerE * CramerD - CramerB * CramerF) / DeterminantA;
           double IntersectionY = (CramerA * CramerF - CramerC * CramerE) / DeterminantA;
 
-          // ROS_INFO("x %lf", IntersectionX);
-          // ROS_INFO("y %lf", IntersectionY);
+
 
           Illegal = false;
           for (int j = 0; j < HullRules.size(); j++) // for all rules
           {
-            // ROS_INFO("i,j: %i %i",i,j);
             /* code */
             // check whether vector does not violate rules
             std::vector<double> CurrentRule = HullRules[j];
@@ -296,11 +284,9 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
             {
 
               double IntersectionCalculation = CurrentRule[0] * IntersectionX + CurrentRule[1] * IntersectionY + CurrentRule[2];
-              // ROS_INFO("intersect2 = %lf", IntersectionCalculation);
 
               if (IntersectionCalculation < -FLT_EPSILON)
               {
-                // ROS_INFO("illegal 2");
 
                 Illegal = true;
                 IllegalCount += 1;
@@ -310,20 +296,16 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
           // if not violated, add to hull
           if (!Illegal && !AddCheck)
           {
-            // std::cout << "RV: " << RandomNormal[0] << ", " << RandomNormal[1] << ", " << RandomNormal[2] << std::endl;
             HullLines.push_back(RandomNormal);
             int EndOfVector = HullLines.size() - 1;
-            // std::cout << "HL" << HullLines[EndOfVector][0] << ",\t " << HullLines[EndOfVector][1] << ",\t " << HullLines[EndOfVector][2] << std::endl;
             HullRules.push_back(RandomNormalRule);
             VectorInHull[RandomNormalIndex] = 1;
             AddCheck = true;
           }
-          // ROS_INFO("line 258 illegal? %i", Illegal);
           if (!Illegal)
           {
             std::vector<double> IntersectionVector = {IntersectionX, IntersectionY};
             HullPoints.push_back(IntersectionVector);
-            // ROS_INFO("Added a point");
             AddCheck = true;
           }
 
@@ -333,7 +315,6 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
             if (StopCount == MaxFailures)
             {
               StopSearch = true;
-              // ROS_INFO("STOP 2");
             }
           }
 
@@ -343,7 +324,6 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
         else
         {
           IllegalCount += 1;
-          // ROS_INFO("Parallel");
         }
       }
 
@@ -351,7 +331,6 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
       for (int i = 0; i < HullPoints.size(); i++) // for all hull points
       {
 
-        /* code */
         // check latest rule
         double CurrentPointX = HullPoints[i][0];
         double CurrentPointY = HullPoints[i][1];
@@ -367,7 +346,6 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
 
             PointsToRemove.push_back(i);
             Illegal = true;
-            // ROS_INFO("pushed back: %i", i);
           }
         }
         else if (((signum(CurrentRule[1]) == -1 && (CurrentRule[3]) == 1) || (signum(CurrentRule[1]) == 1 && (CurrentRule[3]) == -1) || (signum(CurrentRule[1]) == 0 && (CurrentRule[4]) == -1) || (signum(CurrentRule[0]) == 0 && (CurrentRule[3]) == -1)) && !Illegal)
@@ -413,7 +391,6 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
           VectorInHull[HullRules[j][5]] = 0;
         }
       }
-      // remove lines and rules
 
       if (LinesToRemove.size() != HullRules.size())
       {
@@ -424,25 +401,9 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
         }
       }
 
-      // for reporting
-      // std::cout << "Current Hull Lines" << std::endl;
-      // std::cout << "Size: " << HullLines.size() << std::endl;
 
-      // for (int z = 0; z < HullLines.size(); z++)
-      // {
-      //   std::cout << " a " << HullLines[z][0] << " b " << HullLines[z][1] << " c " << HullLines[z][2] << std::endl;
-      // }
-
-      // std::cout << "Current Hull Points" << std::endl;
-      // std::cout << "Size: " << HullPoints.size() << std::endl;
-
-      // for (int z = 0; z < HullPoints.size(); z++)
-      // {
-      //   std::cout << " x " << HullPoints[z][0] << " y " << HullPoints[z][1] << std::endl;
-      // }
     }
 
-    // calculate score
     double IterationX = 0.0;
     double IterationY = 0.0;
     int InlierCount = 0;
@@ -451,7 +412,6 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
     {
       IterationX = IterationX + HullPoints[i][0];
       IterationY = IterationY + HullPoints[i][1];
-      // ROS_INFO("hp x %lf y %lf",HullPoints[i][0],HullPoints[i][1]);
     }
     IterationX = IterationX / (double)HullPoints.size();
     IterationY = IterationY / (double)HullPoints.size();
@@ -477,12 +437,10 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
         }
       }
     }
-    // ROS_INFO("inlier score %i", InlierCount);
 
     IterationScore = InlierCount;
 
-    // ROS_INFO("it score %i", IterationScore);
-    //   ROS_INFO("max score %i", MaxScore);
+
 
     if ((IterationScore > MaxScore) || ((IterationScore == MaxScore) && (AmountOfVectorsUsed > MaxUsed)))
     {
@@ -501,13 +459,11 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
     double FOEY = 0;
     for (int i = 0; i < BestHull.size(); i++)
     {
-      // ROS_INFO("point %i: %lf, %lf", i, BestHull[i][0], BestHull[i][1]);
+      
       FOEX = (FOEX + BestHull[i][0]);
       FOEY = (FOEY + BestHull[i][1]);
-      // ROS_INFO("FOEX %lf", FOEX);
-      // ROS_INFO("FOEY %lf", FOEY);
+
     }
-    // std::cout << FOEX / (double)BestHull.size() << "," << FOEY / (double)BestHull.size() << std::endl;
 
     FOEX = FOEX / (double)BestHull.size();
     FOEY = FOEY / (double)BestHull.size();
@@ -533,18 +489,6 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
     *FoE_x = std::accumulate(FoE_hist_x.begin(), FoE_hist_x.end(), 0.0) / FoE_hist_x.size();
     *FoE_y = std::accumulate(FoE_hist_y.begin(), FoE_hist_y.end(), 0.0) / FoE_hist_y.size();
 
-    /*
-
-      tan30 = 120/XX;
-
-      XX = 120/tan30
-
-      FOEangX = atan(FoE_x / (120/tan30)) = atan(FoE_x *tan30 / 120)
-
-      float XX = std::atan(30) * 120;
-
-      float FoE_angle_X = FoE_x/NumPixels_X
-    */
 
     int64_t current_time = OpticFlow[0].t;
 
@@ -575,28 +519,19 @@ void estimationServer()
 {
   // Fill final OF buffer to be used by FOE estimation
   log_OF(&myOF);
-  // std::cout << "2" << std::endl;
 
   std::vector<FlowPacket> optic_flow;
   int buffersize = final_buffer.size();
-  // ROS_INFO("estimationserver buffersize: %i", buffersize);
-  // std::cout << "size: " << final_buffer.size() << std::endl;
 
   if (final_buffer.size() > min_vectors) // min amount of vectors required
   {
 
-    // double beforetime = ros::Time::now().toSec();
-    // std::cout << "3" << std::endl;
 
     // Run FOE estimation
     estimateFoECPP(final_buffer, &FoE_x, &FoE_y);
-    // Add 0.5 to FoE_x for truncating by compiler to integer
-    // double calctime = ros::Time::now().toSec() - beforetime;
+
     final_buffer.clear();
 
-    // ROS_INFO("estimateFoECPP time: %f", calctime);
-
-    // Publish the FOE onto its topic
   }
 }
 
@@ -626,19 +561,12 @@ void opticflowCallback(const dvs_of_msg::FlowPacketMsgArray::ConstPtr &msg) // g
   if (ros::Time::now().toNSec() - prev_time >= period_)
   {
     prev_time = ros::Time::now().toNSec();
-
-    // Fill OF buffers and run FOE estimation
-
-    // Run FOE estimation
-    // std::cout << "1" << std::endl;
-
     estimationServer();
 
     FoE_msg.x = (int)FoE_x;
     FoE_msg.y = (int)FoE_y;
     FoE_pub.publish(FoE_msg);
 
-    // Add 0.5 to FoE_x for truncating by compiler to integer
   }
 }
 
@@ -651,17 +579,8 @@ void log_OF(std::vector<FlowPacket> *myOF)
   for (std::vector<FlowPacket>::iterator it = myOF->begin(); it != myOF->end(); it++)
 
   {
-    // double diff = last_ts - period_;
-    // double currenttime = (*it).t;
-    // if (currenttime >= diff)
-    //{
 
     last_ts = (*it).t;
-    // OFvec_buf.x = (*it).x;
-    // OFvec_buf.y = (*it).y;
-    // OFvec_buf.u = (*it).u;
-    // OFvec_buf.v = (*it).v;
-    // OFvec_buf.t = (*it).t;
     final_buffer.push_back((*it));
     //}
   }
