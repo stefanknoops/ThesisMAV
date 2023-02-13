@@ -12,6 +12,13 @@
   </node>
 
   <!-- visualization -->
+  <node name="dvs_renderer_left" pkg="dvs_renderer" type="dvs_renderer" output="screen">
+    <param name="display_method" value="red-blue"/>
+    <remap from="events" to="/dvs/events" />
+    <remap from="image" to="/dvs/image_raw" />
+    <remap from="dvs_rendering" to="dvs_rendering" />
+  </node>
+
   <node name="dvs_of" pkg="dvs_of" type="dvs_of" output="screen">
     <param name="folder" value="/home/mavlab/ThesisMAV/Experiments/$(arg experiment)/" />
     <param name="calib" value="$(arg calibration)" />
@@ -23,6 +30,13 @@
     <param name="folder" value="/home/mavlab/ThesisMAV/Experiments/$(arg experiment)/" />
   </node>
 
+  <!-- display -->
+  <!-- <node name="image_view_left" pkg="rqt_image_view" type="rqt_image_view">
+  	<remap from="image" to="low_freq_rendering"/>
+  </node> -->
+
+  <node name="foe_visualization" pkg="cpp_foe" type="foe_visualization" output="screen">
+  </node>
  
   <node pkg="rosbag" type="record" name="rosbag_record_cam" args="record -o /home/mavlab/ThesisMAV/Experiments/$(arg experiment)/ /dvs/imu /dvs/events /OpticFlow /FoE" />
 

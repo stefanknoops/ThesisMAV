@@ -220,11 +220,11 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
 
   FoE_rec_file << current_time << ", " << *FoE_x << ", " << *FoE_y << ", " << FOEX << ", " << FOEY << ", " << FoE_hist_x.size() << ", " << OpticFlow.size() << ", " << max_inliers << ", " << "0 , " << calctime << std::endl;
 
-  for (int i = 0; i < OpticFlow.size(); i++)
-  {
-    // std::cout << current_time << "," << 0 << "," << OpticFlow[i].x << "," << OpticFlow[i].y << "," << OpticFlow[i].u << "," << OpticFlow[i].v << std::endl
-    FoE_flow_rec_file << current_time << "," << OpticFlow[i].x << "," << OpticFlow[i].y << "," << OpticFlow[i].u << "," << OpticFlow[i].v << "," << OpticFlow[i].ru << "," << OpticFlow[i].rv << std::endl;
-  }
+//   for (int i = 0; i < OpticFlow.size(); i++)
+//   {
+//     // std::cout << current_time << "," << 0 << "," << OpticFlow[i].x << "," << OpticFlow[i].y << "," << OpticFlow[i].u << "," << OpticFlow[i].v << std::endl
+//     // FoE_flow_rec_file << current_time << "," << OpticFlow[i].x << "," << OpticFlow[i].y << "," << OpticFlow[i].u << "," << OpticFlow[i].v << "," << OpticFlow[i].ru << "," << OpticFlow[i].rv << std::endl;
+//   }
 }
 
 void estimationServer()

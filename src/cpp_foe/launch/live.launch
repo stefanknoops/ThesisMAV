@@ -1,0 +1,19 @@
+<launch>
+  <!-- camera driver -->
+
+  <arg name="experiment" default="unspecified" />
+  <arg name="calibration" default="cam_222" />
+  <arg name="orientation" default="dvs" />
+
+
+  <node name="davis_ros_driver" pkg="davis_ros_driver" type="davis_ros_driver" output="screen">
+    <remap from="camera_info" to="/dvs/camera_info" />
+    <remap from="imu" to="/dvs/imu" />
+  </node>
+
+
+ 
+  <!-- <node pkg="rosbag" type="record" name="rosbag_record_cam" args="record -o /home/mavlab/ThesisMAV/Experiments/$(arg experiment)/ /dvs/imu /dvs/events " /> -->
+
+
+</launch>

@@ -33,58 +33,7 @@ namespace dvs_of
     dvs_of_msg::FlowPacketMsgArray PacketPub_;
     dvs_of_msg::VectorCount countpackage;
 
-    /**
-     * Function for implementing the binary search
-     */
-    uint32_t RateBuffer::find_closest_rate_idx(int64_t ts)
-    {
-        int32_t idx_upper = this->length_ - 1;
-        int32_t idx_lower = 0;
-        int32_t current_idx = idx_upper / 2;
 
-        int32_t current_idx_wrapped = (this->buffer_idx_ - current_idx + this->length_) % this->length_;
-
-        while (ts != this->buffer_[current_idx_wrapped].ts && idx_upper - idx_lower > 1)
-        {
-            if (ts < this->buffer_[current_idx_wrapped].ts)
-            {
-                idx_lower = current_idx;
-                current_idx += (idx_upper - current_idx) / 2;
-            }
-            else
-            {
-                idx_upper = current_idx;
-                current_idx += (idx_lower - current_idx) / 2;
-            }
-            current_idx_wrapped = (this->buffer_idx_ - current_idx + this->length_) % this->length_;
-        }
-
-        // Value absolutely closest to requested
-        if (ts < this->buffer_[current_idx_wrapped].ts)
-        {
-            if (this->buffer_[current_idx_wrapped].ts - ts > fabsf((float)ts - (float)this->buffer_[(current_idx_wrapped - 1 + this->length_) % this->length_].ts))
-            {
-                current_idx_wrapped = (current_idx_wrapped - 1 + this->length_) % this->length_;
-            }
-        }
-        else if (ts > this->buffer_[current_idx_wrapped].ts)
-        {
-            if (ts - this->buffer_[current_idx_wrapped].ts > fabsf((float)ts - (float)this->buffer_[(current_idx_wrapped + 1) % this->length_].ts))
-            {
-                current_idx_wrapped = (current_idx_wrapped + 1) % this->length_;
-            }
-        }
-        // ROS_INFO("idx wrapped %i",current_idx_wrapped);
-        return current_idx_wrapped;
-    }
-
-    rates_t RateBuffer::find_closest_rate(int64_t ts)
-    {
-        this->rates_mutex.lock();
-        rates_t rate = this->buffer_[this->find_closest_rate_idx(ts)];
-        this->rates_mutex.unlock();
-        return rate;
-    }
 
     /**
      * Get average rate from ts to now
@@ -181,31 +130,27 @@ namespace dvs_of
         for (; it != myIMU->end(); it++)
         {
 
-            this->p_filt.update((*it).gyr_x); // pitch
-            this->q_filt.update((*it).gyr_y); // yaw
-            this->r_filt.update((*it).gyr_z); // roll
+            // float p_filt_median = this->p_filt.update((*it).gyr_x); // pitch
+            // float q_filt_median = this->q_filt.update((*it).gyr_y); // yaw
+            // float r_filt_median = this->r_filt.update((*it).gyr_z); // roll
+
+            float p_new = (*it).gyr_x;
+            float q_new = (*it).gyr_y;
+            float r_new = (*it).gyr_z;
 
             if ((*it).t >= last_ts + this->period_ && initialized)
             {
 
                 this->rates_mutex.lock();
                 last_ts = (*it).t;
-                /*
-                //("buffer idx input %i",this->buffer_idx_);
 
-                this->buffer_[this->buffer_idx_].p = this->p_filt.get_median() - zero_rates.p;
-                this->buffer_[this->buffer_idx_].q = this->q_filt.get_median() - zero_rates.q;
-                this->buffer_[this->buffer_idx_].r = this->r_filt.get_median() - zero_rates.r;
-                this->buffer_[this->buffer_idx_].ts = last_ts;
-                this->buffer_idx_ = (this->buffer_idx_ + 1) % this->length_;
-                */
                 rates_t newRates;
-                newRates.p = this->p_filt.get_median() - zero_rates.p;
-                newRates.q = this->q_filt.get_median() - zero_rates.q;
-                newRates.r = this->r_filt.get_median() - zero_rates.r;
+                newRates.p = p_new - zero_rates.p;
+                newRates.q = q_new - zero_rates.q;
+                newRates.r = r_new - zero_rates.r;
                 newRates.ts = last_ts;
                 NewBuffer.push_back(newRates);
-                if (NewBuffer.size() > 5)
+                if (NewBuffer.size() > 20)
                 {
                     NewBuffer.erase(NewBuffer.begin());
                 }
@@ -221,82 +166,38 @@ namespace dvs_of
                 newRates.r = (*it).gyr_z;
 
                 NewBuffer.push_back(newRates);
-                if (NewBuffer.size() > 5)
+                if (NewBuffer.size() > 20)
                 {
                     NewBuffer.erase(NewBuffer.begin());
                 }
 
                 this->rates_mutex.unlock();
             }
+            if (!initialized)
+            {
+                init_counter++;
+                // zero_rates.p += this->p_filt.get_median();
+                // zero_rates.q += this->q_filt.get_median();
+                // zero_rates.r += this->r_filt.get_median();
+                zero_rates.p += p_new;
+                zero_rates.q += q_new;
+                zero_rates.r += r_new;
+
+                if (init_counter >= 100) //>= 200)
+                {
+
+                    zero_rates.p /= init_counter;
+                    zero_rates.q /= init_counter;
+                    zero_rates.r /= init_counter;
+                    initialized = true;
+                    ROS_INFO("Zero rates: %f %f %f", zero_rates.p, zero_rates.q, zero_rates.r);
+                }
+            }
         }
 
         // Get average zero reading
-        if (!initialized)
-        {
-            init_counter++;
-            zero_rates.p += this->p_filt.get_median();
-            zero_rates.q += this->q_filt.get_median();
-            zero_rates.r += this->r_filt.get_median();
-            if (init_counter >= 100) //>= 200)
-            {
-
-                zero_rates.p /= init_counter;
-                zero_rates.q /= init_counter;
-                zero_rates.r /= init_counter;
-                initialized = true;
-                ROS_INFO("Zero rates: %f %f %f", zero_rates.p, zero_rates.q, zero_rates.r);
-            }
-        }
     }
 
-    /**
-     * Function log_rates(std::vector<IMU> *myIMU) adapted for off-line processing
-     */
-    void RateBuffer::offline_log_rates(std::vector<IMU> *myIMU)
-    {
-        static rates_t zero_rates = {0.f, 0.f, 0.f, 0};
-
-        // Pass gyro through median filter to remove outliers
-        // std::cout << "\n\t ... Processing IMU data." << std::endl;
-        std::vector<IMU>::iterator it = myIMU->begin();
-
-        // Determine the zero_rates
-        static int init_counter = 0;
-        while (init_counter <= MAX_COUNTER && it != myIMU->end())
-        {
-            init_counter++;
-            this->p_filt.update((*it).gyr_x);
-            this->q_filt.update((*it).gyr_y);
-            this->r_filt.update((*it).gyr_z);
-            zero_rates.p += this->p_filt.get_median();
-            zero_rates.q += this->q_filt.get_median();
-            zero_rates.r += this->r_filt.get_median();
-            it++;
-        }
-        zero_rates.p /= init_counter;
-        zero_rates.q /= init_counter;
-        zero_rates.r /= init_counter;
-
-        // Apply the median filter on the IMU data-set
-        this->resetMedianFilters();
-        it = myIMU->begin();
-        int64_t t0 = (*it).t;
-        int64_t tf = 0;
-        for (; it != myIMU->end(); it++)
-        {
-            this->p_filt.update((*it).gyr_x);
-            this->q_filt.update((*it).gyr_y);
-            this->r_filt.update((*it).gyr_z);
-            tf = (*it).t;
-            this->rates_mutex.lock();
-            this->buffer_[this->buffer_idx_].p = RadOfDeg(this->p_filt.get_median() - zero_rates.p);
-            this->buffer_[this->buffer_idx_].q = RadOfDeg(this->q_filt.get_median() - zero_rates.q);
-            this->buffer_[this->buffer_idx_].r = RadOfDeg(this->r_filt.get_median() - zero_rates.r);
-            this->buffer_[this->buffer_idx_].ts = tf;
-            this->buffer_idx_ = (this->buffer_idx_ + 1) % this->length_;
-            this->rates_mutex.unlock();
-        }
-    }
 
     /**
      * Initialize the flow state and parameters
@@ -448,8 +349,6 @@ namespace dvs_of
 
         double derotate_u = 0.f, derotate_v = 0.f;
         double derotate_mag = 0.0f;
-
-        // Find rate in center of fitted plane
 
         rates = this->myRates->find_average_rate(FlowPacket.tP);
 
@@ -605,7 +504,7 @@ namespace dvs_of
             PacketPub_.width = 240;
 
             // Output OF to .txt file
-            this->storeEventsFlow(u_der, v_der, derotate_mag, rates, rotational_u, rotational_v, ang_OF);
+            // this->storeEventsFlow(u_der, v_der, derotate_mag, rates, rotational_u, rotational_v, ang_OF);
             OpticFlow::checkVectorDirection(this->myFlowPacket);
 
             // Check if rotation is too large
@@ -724,13 +623,13 @@ namespace dvs_of
             myOpticFlow->myRates->log_rates(&myIMU);
         }
 
-        IMU_rec_file << (msg->header.stamp.toNSec() / 1000) << ",";
-        IMU_rec_file << (double)msg->linear_acceleration.x << ",";
-        IMU_rec_file << (double)msg->linear_acceleration.y << ",";
-        IMU_rec_file << (double)msg->linear_acceleration.z << ",";
-        IMU_rec_file << (float)msg->angular_velocity.x << ",";
-        IMU_rec_file << (float)msg->angular_velocity.y << ",";
-        IMU_rec_file << (float)msg->angular_velocity.z << std::endl;
+        // IMU_rec_file << (msg->header.stamp.toNSec() / 1000) << ",";
+        // IMU_rec_file << (double)msg->linear_acceleration.x << ",";
+        // IMU_rec_file << (double)msg->linear_acceleration.y << ",";
+        // IMU_rec_file << (double)msg->linear_acceleration.z << ",";
+        // IMU_rec_file << (float)msg->angular_velocity.x << ",";
+        // IMU_rec_file << (float)msg->angular_velocity.y << ",";
+        // IMU_rec_file << (float)msg->angular_velocity.z << std::endl;
     }
 
     void Server::eventsCallback(const dvs_msgs::EventArray::ConstPtr &msg)
@@ -753,10 +652,10 @@ namespace dvs_of
                     {
                         if (e.y > mY - Y_FOV_RADIUS && e.y < mY + Y_FOV_RADIUS)
                         {
-                            DVS_rec_file << e.t << ",";
-                            DVS_rec_file << e.x << ",";
-                            DVS_rec_file << e.y << ",";
-                            DVS_rec_file << e.p << std::endl;
+                            // DVS_rec_file << e.t << ",";
+                            // DVS_rec_file << e.x << ",";
+                            // DVS_rec_file << e.y << ",";
+                            // DVS_rec_file << e.p << std::endl;
                             myEvents.push_back(e);
                         }
                     }
@@ -768,12 +667,15 @@ namespace dvs_of
 
                 myOpticFlow->computeOpticFlowVectors(&myEvents, &myIMU);
 
-                OF_pub_.publish(PacketPub_);
-                CountPublish.publish(countpackage);
+                if (PacketPub_.flowpacketmsgs.size() > 0)
+                {
+                    OF_pub_.publish(PacketPub_);
+                    CountPublish.publish(countpackage);
 
-                countpackage.Backward = 0;
-                countpackage.Forward = 0;
-                PacketPub_.flowpacketmsgs.clear();
+                    countpackage.Backward = 0;
+                    countpackage.Forward = 0;
+                    PacketPub_.flowpacketmsgs.clear();
+                }
             }
         }
     }

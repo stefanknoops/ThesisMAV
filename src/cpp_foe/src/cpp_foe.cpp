@@ -552,22 +552,22 @@ void estimateFoECPP(std::vector<FlowPacket> OpticFlow, double *FoE_x,
 
     FoE_rec_file << current_time << ", " << *FoE_x << ", " << *FoE_y << ", " << FOEX << ", " << FOEY << ", " << FoE_hist_x.size() << ", " << ArraySize << ", " << MaxScore << ", " << MaxUsed << ", " << calctime << std::endl;
 
-    for (int i = 0; i < BestHullLines.size(); i++)
-    { // std::cout << "besthull" << current_time << "," << BestHullLines[i][0] << "," << BestHullLines[i][1] << "," << BestHullLines[i][2] << std::endl;
+    // for (int i = 0; i < BestHullLines.size(); i++)
+    // { // std::cout << "besthull" << current_time << "," << BestHullLines[i][0] << "," << BestHullLines[i][1] << "," << BestHullLines[i][2] << std::endl;
 
-      HL_log_file << current_time << "," << BestHullLines[i][0] << "," << BestHullLines[i][1] << "," << BestHullLines[i][2] << std::endl;
-    }
+    //   HL_log_file << current_time << "," << BestHullLines[i][0] << "," << BestHullLines[i][1] << "," << BestHullLines[i][2] << std::endl;
+    // }
 
-    for (int i = 0; i < BestHull.size(); i++)
-    {
-      HP_log_file << current_time << "," << BestHull[i][0] << "," << BestHull[i][1] << std::endl;
-    }
+    // for (int i = 0; i < BestHull.size(); i++)
+    // {
+    //   HP_log_file << current_time << "," << BestHull[i][0] << "," << BestHull[i][1] << std::endl;
+    // }
 
-    for (int i = 0; i < ArraySize; i++)
-    {
-      // std::cout << current_time << "," << 0 << "," << OpticFlow[i].x << "," << OpticFlow[i].y << "," << OpticFlow[i].u << "," << OpticFlow[i].v << std::endl
-      FoE_flow_rec_file << current_time << "," << OpticFlow[i].x << "," << OpticFlow[i].y << "," << OpticFlow[i].u << "," << OpticFlow[i].v << "," << OpticFlow[i].ru << "," << OpticFlow[i].rv << std::endl;
-    }
+    // for (int i = 0; i < ArraySize; i++)
+    // {
+    //   // std::cout << current_time << "," << 0 << "," << OpticFlow[i].x << "," << OpticFlow[i].y << "," << OpticFlow[i].u << "," << OpticFlow[i].v << std::endl
+    // //   FoE_flow_rec_file << current_time << "," << OpticFlow[i].x << "," << OpticFlow[i].y << "," << OpticFlow[i].u << "," << OpticFlow[i].v << "," << OpticFlow[i].ru << "," << OpticFlow[i].rv << std::endl;
+    // }
   }
 }
 
@@ -669,7 +669,7 @@ void log_OF(std::vector<FlowPacket> *myOF)
   myOF->clear();
 }
 
-void optitrackCallback(const geometry_msgs::PoseStamped::ConstPtr &msg) // gets the optic flow from the
+void optitrackCallback(const geometry_msgs::PoseStamped::ConstPtr &msg)
 {
 
   OT_log_file << msg->header.stamp << ", " << msg->pose.position.x << ", " << msg->pose.position.x << ", " << msg->pose.position.x << ", ";
